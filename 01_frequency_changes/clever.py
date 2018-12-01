@@ -11,14 +11,12 @@ def get_number_of_loops(accumulate, total):
     #
     # So after n loops, the ith number in the sequence is just accumulate[i] +
     # total*n. That means a number, accumulate[j], will be repeated if we have
-    #   accumulate[i] = accumulate[j] + n * total
+    #   accumulate[i] + n * total = accumulate[j]
     # for some positive integer n.
     #
-    # Do count sort. Put all the numbers from accumulate, x, into an array,
-    # visited, at index i s.t. x % total == i.
-    #
-    # Now we only need to consider pairs of numbers which are in the same
-    # element of visited.
+    # Do count sort. Put all the numbers, x, from accumulate into a dict,
+    # visited, at index i s.t. x % total == i. Now we only need to consider
+    # pairs of numbers which are in the same element of visited.
     #
     # If two intersections happen after the same number of loops, the winner is
     # determined by the original position of accumulate[i], so we need to keep
@@ -26,33 +24,23 @@ def get_number_of_loops(accumulate, total):
 
     visited = defaultdict(list)
     for pos, x in enumerate(accumulate):
-        # We need pos as a tiebreaker
         visited[x % total].append((x, pos))
 
-    mintuple = None
     for v in visited.values():
         # Want to loop through pairs (x, y) such that x + n*total = y for
-        # positive n
+        # positive n. So if total is positive want x<y, else want x>y
         v.sort(reverse = total<0)
 
-        for i in range(len(v)):
-            for j in range(i+1, len(v)):
+        # To find the first intersection, only need to consider neighbouring
+        # elements
+        for (x, xpos), (y, _) in zip(v, v[1:]):
+            n_loops = (y - x) // total
 
-                n_loops = (v[j][0] - v[i][0]) // total
+            # print("get from {:4d} to {:4d} after {:4d} loops".format(
+            #     x, y, n_loops), end=' ')
+            # print("   x position: {}".format(xpos))
 
-                # print("get from {:4d} to {:4d} after {:4d} loops".format(
-                #     v[i][0], v[j][0], n_loops), end=' ')
-                # print("\t\ttiebreaker: {}".format(v[i][1]))
-
-                candidate = (n_loops, v[i][1], v[j][0])
-                if mintuple is None or candidate < mintuple:
-                    mintuple = candidate
-                else:
-                    # Since v is sorted, larger values of j will only yield
-                    # matches which occur after >= loops
-                    break
-
-    return mintuple[2]
+            yield (n_loops, xpos, y)
 
 def solve(changes):
     accumulate = [0]*len(changes)
@@ -71,8 +59,6 @@ def solve(changes):
     # Solution for part 1
     total = accumulate[-1] + changes[-1]
 
-    # print("accumulate:", accumulate)
-
     if revisited is not None:
         return total, revisited
     elif total == 0:
@@ -80,7 +66,7 @@ def solve(changes):
         return total, 0
 
     # Solution for part 2
-    revisited = get_number_of_loops(accumulate, total)
+    revisited = min(get_number_of_loops(accumulate, total))[2]
 
     return total, revisited
 
