@@ -4,10 +4,9 @@ def gen_changes(fname, repeat=False):
     # Generator to get the changes in frequency.
     # This loops round to the start if necessary.
 
-    changes = []
     with open(fname, 'r') as f:
-        for x in f:
-            changes.append(int(x))
+        changes = [int(x) for x in f]
+
     i = 0
     while True:
         if i == len(changes):
