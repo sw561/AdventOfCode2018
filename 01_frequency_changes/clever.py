@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from collections import defaultdict
+
 def get_number_of_loops(accumulate, total):
     # Yield tuples of the form (number of loops, pos_in_loop, repeated_number)
     #
@@ -22,12 +24,13 @@ def get_number_of_loops(accumulate, total):
     # determined by the original position of accumulate[i], so we need to keep
     # track of the original positions as a tiebreaker mechanism.
 
-    visited = [[] for _ in range(abs(total))]
+    visited = defaultdict(list)
     for pos, x in enumerate(accumulate):
         # We need pos as a tiebreaker
         visited[x % total].append((x, pos))
 
-    for v in visited:
+    mintuple = None
+    for v in visited.values():
         # Want to loop through pairs (x, y) such that x + n*total = y for
         # positive n
         v.sort(reverse = total<0)
@@ -41,7 +44,15 @@ def get_number_of_loops(accumulate, total):
                 #     v[i][0], v[j][0], n_loops), end=' ')
                 # print("\t\ttiebreaker: {}".format(v[i][1]))
 
-                yield (n_loops, v[i][1], v[j][0])
+                candidate = (n_loops, v[i][1], v[j][0])
+                if mintuple is None or candidate < mintuple:
+                    mintuple = candidate
+                else:
+                    # Since v is sorted, larger values of j will only yield
+                    # matches which occur after >= loops
+                    break
+
+    return mintuple[2]
 
 def solve(changes):
     accumulate = [0]*len(changes)
@@ -69,7 +80,7 @@ def solve(changes):
         return total, 0
 
     # Solution for part 2
-    revisited = min(get_number_of_loops(accumulate, total))[2]
+    revisited = get_number_of_loops(accumulate, total)
 
     return total, revisited
 
