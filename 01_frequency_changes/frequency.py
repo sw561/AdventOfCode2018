@@ -1,31 +1,14 @@
 #!/usr/bin/env python3
 
-def gen_changes(fname, repeat=False):
-    # Generator to get the changes in frequency.
-    # This loops round to the start if necessary.
+from itertools import cycle
 
-    with open(fname, 'r') as f:
-        changes = [int(x) for x in f]
-
-    i = 0
-    while True:
-        if i == len(changes):
-            if repeat:
-                i = 0
-            else:
-                return
-        yield changes[i]
-        i += 1
-
-def part1(fname):
-    changes = gen_changes(fname)
+def part1(changes):
     return sum(changes)
 
-def part2(fname):
-    changes = gen_changes(fname, repeat=True)
-
+def part2(changes):
     freq = 0
     visited = set()
+    changes = cycle(changes)
 
     while freq not in visited:
         visited.add(freq)
@@ -34,5 +17,8 @@ def part2(fname):
     return freq
 
 if __name__=="__main__":
-    print(part1("01_frequency_changes/input.txt"))
-    print(part2("01_frequency_changes/input.txt"))
+    with open("01_frequency_changes/input.txt", 'r') as f:
+        changes = [int(x) for x in f]
+
+    print(part1(changes))
+    print(part2(changes))

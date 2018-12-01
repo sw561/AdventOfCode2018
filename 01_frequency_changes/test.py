@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from clever import solve
+from frequency import part1, part2
 
 def assertEqual(x, y):
     try:
@@ -9,37 +10,31 @@ def assertEqual(x, y):
         print("{} != {}".format(x, y))
         raise
 
-def test_f():
-    changes = [+1, -2, +3, +1]
-    assertEqual(solve(changes), (3, 2))
+def test_input():
+    yield [+1, -2, +3, +1]
 
     changes = [+3, +3, +4, -2, -4]
-    assertEqual(solve(changes), (4, 10))
+    yield changes
 
-    changes = [-x for x in changes]
-    assertEqual(solve(changes), (-4, -10))
+    yield [-x for x in changes]
 
-    changes = [-6, +3, +8, +5, -6]
-    assertEqual(solve(changes), (4, 5))
+    yield [-6, +3, +8, +5, -6]
 
-    changes = [+7, +7, -2, -7, -4]
-    assertEqual(solve(changes), (1, 14))
+    yield [+7, +7, -2, -7, -4]
 
-    changes = [+1, -1]
-    assertEqual(solve(changes), (0, 0))
+    yield [+1, -1]
 
-    changes = [3, 5, -5]
-    assertEqual(solve(changes), (3, 3))
+    yield [3, 5, -5]
 
-    changes = [3, 5, 1, -1, -5]
-    assertEqual(solve(changes), (3, 8))
+    yield [3, 5, 1, -1, -5]
 
-    changes = [3, 5, -5, -3]
-    assertEqual(solve(changes), (0, 3))
+    yield [3, 5, -5, -3]
 
-    changes = [3, 5, -5, -3, 1]
-    assertEqual(solve(changes), (1, 3))
+    yield [3, 5, -5, -3, 1]
 
+def test_f():
+    for changes in test_input():
+        assertEqual(solve(changes), (part1(changes), part2(changes)))
     print("Tests passed")
 
 test_f()
