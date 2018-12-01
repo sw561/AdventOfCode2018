@@ -1,14 +1,6 @@
 #!/usr/bin/env python3
 
-def part1(fname):
-    with open(fname, 'r') as f:
-        freq = 0
-        for i in f:
-            freq += int(i)
-
-    return freq
-
-def gen_changes(fname):
+def gen_changes(fname, repeat=False):
     # Generator to get the changes in frequency.
     # This loops round to the start if necessary.
 
@@ -19,12 +11,19 @@ def gen_changes(fname):
     i = 0
     while True:
         if i == len(changes):
-            i = 0
+            if repeat:
+                i = 0
+            else:
+                return
         yield changes[i]
         i += 1
 
-def part2(fname):
+def part1(fname):
     changes = gen_changes(fname)
+    return sum(changes)
+
+def part2(fname):
+    changes = gen_changes(fname, repeat=True)
 
     freq = 0
     visited = set()
