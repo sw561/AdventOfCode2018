@@ -16,9 +16,16 @@ def checksum(ids):
 def find_close(ids):
     for i in range(len(ids)):
         for j in range(i+1, len(ids)):
-            # Exactly one not matching
-            if sum(1 for x, y in zip(ids[i], ids[j]) if x != y) == 1:
-                return "".join(x for x, y in zip(ids[i], ids[j]) if x == y)
+
+            count_not_matching = 0
+            for x, y in zip(ids[i], ids[j]):
+                if x!=y:
+                    count_not_matching += 1
+                    if count_not_matching > 1:
+                        break
+            else:
+                if count_not_matching == 1:
+                    return "".join(x for x, y in zip(ids[i], ids[j]) if x==y)
 
 if __name__=="__main__":
     with open("02_inventory/input.txt", 'r') as f:
