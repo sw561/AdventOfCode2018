@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from collections import Counter
+from itertools import combinations
 
 def checksum(ids):
     n_twice = 0
@@ -8,24 +9,44 @@ def checksum(ids):
 
     for i in ids:
         c = Counter(i)
-        n_twice += any(x == 2 for x in c.values())
-        n_thrice += any(x == 3 for x in c.values())
+        n_twice += 2 in c.values()
+        n_thrice += 3 in c.values()
 
     return n_twice * n_thrice
 
-def find_close(ids):
-    for i in range(len(ids)):
-        for j in range(i+1, len(ids)):
+def close(a, b):
+    count_not_matching = 0
+    for x, y in zip(a, b):
+        if x!=y:
+            count_not_matching += 1
+            if count_not_matching > 1:
+                return False
+    return count_not_matching == 1
 
-            count_not_matching = 0
-            for x, y in zip(ids[i], ids[j]):
-                if x!=y:
-                    count_not_matching += 1
-                    if count_not_matching > 1:
-                        break
-            else:
-                if count_not_matching == 1:
-                    return "".join(x for x, y in zip(ids[i], ids[j]) if x==y)
+def get_candidate_combinations(ids, brute=False):
+
+    if brute:
+        # This is roughly the same speed for my input, but is likely to be
+        # slower for an arbitrary list of id strings
+        yield from combinations(ids, 2)
+        return
+
+    # Use a property of ids to sort, and thus avoid checking every pair of ids
+    ids = [(sum(map(ord, x)), x) for x in ids]
+    ids.sort()
+
+    # Two ids which differ by more than 25 cannot be 'close'
+    for i, (ha, a) in enumerate(ids):
+        for hb, b in ids[i+1:]:
+            if abs(hb - ha) > 25:
+                break
+            yield a, b
+
+def find_close(ids):
+    # Use a property of ids to sort, and thus avoid checking every pair of ids
+    for a, b in get_candidate_combinations(ids):
+        if close(a, b):
+            return "".join(x for x, y in zip(a, b) if x==y)
 
 if __name__=="__main__":
     with open("02_inventory/input.txt", 'r') as f:
