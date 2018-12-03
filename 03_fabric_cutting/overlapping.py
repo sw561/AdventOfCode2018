@@ -17,8 +17,8 @@ def process(claims, size=1000):
     overlapping_claim = [False]*len(claims)
 
     for claim_id, x, y, w, h in map(read, claims):
-
         for yi, xi in product(range(y, y+h), range(x, x+w)):
+
             if grid[yi][xi] is None:
                 grid[yi][xi] = claim_id
             elif grid[yi][xi] == -1:
@@ -35,9 +35,7 @@ def overlap(claims):
 
     part1 = sum(sum(1 for x in row if x==-1) for row in grid)
 
-    for claim_id, overlapping in enumerate(overlapping_claim):
-        if overlapping is False:
-            part2 = claim_id + 1
+    part2 = overlapping_claim.index(False) + 1
 
     return part1, part2
 
