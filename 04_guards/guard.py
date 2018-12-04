@@ -32,18 +32,16 @@ def part1(sleep_data):
     # Get data for the guard who slept the most
     guard_id, data = max(sleep_data.items(), key=lambda x: sum(x[1]))
 
-    # Find sleepiest minute
+    # Find sleepiest minute for that specific guard
     minute, n_sleep = max(enumerate(data), key=lambda x: x[1])
     return n_sleep, guard_id, minute
 
-def loop_through(sleep_data):
-    for guard_id, data in sleep_data.items():
-        for minute, n_sleep in enumerate(data):
-            yield n_sleep, guard_id, minute
-
 def part2(sleep_data):
     # Find the sleepiest minute overall
-    return max(loop_through(sleep_data))
+    return max((n_sleep, guard_id, minute)
+        for (guard_id, data) in sleep_data.items()
+        for (minute, n_sleep) in enumerate(data)
+        )
 
 if __name__=="__main__":
     with open("04_guards/input.txt", 'r') as f:
