@@ -14,13 +14,14 @@ def test():
         log = [x.strip() for x in f]
 
     sleep_data = process(log)
-    guard_id, minute_max_sleep = part1(sleep_data)
+    n_sleep, guard_id, minute = part1(sleep_data)
+    assertEqual(n_sleep, 2)
     assertEqual(guard_id, 10)
-    assertEqual(minute_max_sleep, 24)
+    assertEqual(minute, 24)
 
-    guard_id, minute, number_of_times_asleep = part2(sleep_data)
+    n_sleep, guard_id, minute = part2(sleep_data)
+    assertEqual(n_sleep, 3)
     assertEqual(guard_id, 99)
     assertEqual(minute, 45)
-    assertEqual(number_of_times_asleep, 3)
 
 test()
