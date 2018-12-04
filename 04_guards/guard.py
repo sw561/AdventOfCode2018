@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
 
 from collections import defaultdict
-from datetime import datetime
 
 def read(log_entry):
-    end_time = log_entry.index(']')
-
-    time = datetime.strptime(log_entry[:end_time+1], "[%Y-%m-%d %H:%M]")
-    data = log_entry[end_time+2:].split()
-    return time, data
+    minute = int(log_entry[15:17])
+    data = log_entry[19:].split()
+    return minute, data
 
 def process(log):
-    log = sorted(map(read, log))
+    log.sort()
 
     # sleep_data[guard_id][i] is the number of times the guard was asleep
     # during the ith minute
@@ -19,16 +16,16 @@ def process(log):
 
     guard_id = None
     asleep = False
-    for time, entry in log:
+    for minute, entry in map(read, log):
 
         if entry[0] == "Guard":
             guard_id = int(entry[1][1:])
 
         elif entry[0] == "falls":
-            asleep = time.minute
+            asleep = minute
 
         elif entry[0] == "wakes":
-            wake = time.minute
+            wake = minute
             for m in range(asleep, wake):
                 sleep_data[guard_id][m] += 1
 
