@@ -9,14 +9,15 @@ def process(log):
     # during the ith minute
     sleep_data = defaultdict(lambda: [0]*60)
 
-    guard_id = None
+    sd = None
     asleep = False
     for log_entry in log:
         minute = int(log_entry[15:17])
         entry = log_entry[19:].split()
 
         if entry[0] == "Guard":
-            guard_id = int(entry[1][1:])
+            # sd points to data for current guard
+            sd = sleep_data[int(entry[1][1:])]
 
         elif entry[0] == "falls":
             asleep = minute
@@ -24,7 +25,7 @@ def process(log):
         elif entry[0] == "wakes":
             wake = minute
             for m in range(asleep, wake):
-                sleep_data[guard_id][m] += 1
+                sd[m] += 1
 
     return sleep_data
 
@@ -48,8 +49,6 @@ if __name__=="__main__":
         log = [x.strip() for x in f]
 
     sleep_data = process(log)
-    n_sleep, guard_id, minute = part1(sleep_data)
-    print(guard_id * minute)
-
-    n_sleep, guard_id, minute = part2(sleep_data)
-    print(guard_id * minute)
+    for p in [part1, part2]:
+        n_sleep, guard_id, minute = p(sleep_data)
+        print(guard_id * minute)
