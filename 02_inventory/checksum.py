@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from collections import Counter
+from collections import defaultdict, Counter
 from itertools import combinations
 
 def checksum(ids):
@@ -14,39 +14,42 @@ def checksum(ids):
 
     return n_twice * n_thrice
 
-def close(a, b):
+def close(ids, i, j, N, second=False):
+    if second:
+        r = range(N//2, N)
+    else:
+        r = range(N//2)
+
     count_not_matching = 0
-    for x, y in zip(a, b):
-        if x!=y:
+    for k in r:
+        if ids[i][k] != ids[j][k]:
             count_not_matching += 1
             if count_not_matching > 1:
                 return False
     return count_not_matching == 1
 
-def get_candidate_combinations(ids, brute=False):
-
-    if brute:
-        # This is roughly the same speed for my input, but is likely to be
-        # slower for an arbitrary list of id strings
-        yield from combinations(ids, 2)
-        return
-
-    # Use a property of ids to sort, and thus avoid checking every pair of ids
-    ids = [(sum(map(ord, x)), x) for x in ids]
-    ids.sort()
-
-    # Two ids which differ by more than 25 cannot be 'close'
-    for i, (ha, a) in enumerate(ids):
-        for hb, b in ids[i+1:]:
-            if abs(hb - ha) > 25:
-                break
-            yield a, b
-
 def find_close(ids):
-    # Use a property of ids to sort, and thus avoid checking every pair of ids
-    for a, b in get_candidate_combinations(ids):
-        if close(a, b):
-            return "".join(x for x, y in zip(a, b) if x==y)
+    # If two ids match with the exception of exactly one letter, either the
+    # first half matches exactly or the second half matches exactly.
+    #
+    # make two dicts, one for first halves and one for second halves.
+    #
+    # For each dict entry store list of indices for which ids[i] match in the
+    # corresponding half
+
+    first = defaultdict(list)
+    second = defaultdict(list)
+    N = len(ids[0])
+
+    for i, x in enumerate(ids):
+        first [x[:N//2]].append(i)
+        second[x[N//2:]].append(i)
+
+    for d, compare_second in zip([first, second], [True, False]):
+        for candidate_indices in d.values():
+            for i, j in combinations(candidate_indices, 2):
+                if close(ids, i, j, N, second=compare_second):
+                    return "".join(x for x, y in zip(ids[i], ids[j]) if x==y)
 
 if __name__=="__main__":
     with open("02_inventory/input.txt", 'r') as f:
