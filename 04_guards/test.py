@@ -10,7 +10,7 @@ def assertEqual(x, y):
         raise
 
 def test():
-    with open("test_input.txt", 'r') as f:
+    with open("04_guards/test_input.txt", 'r') as f:
         log = [x.strip() for x in f]
 
     sleep_data = process(log)
@@ -23,5 +23,7 @@ def test():
     assertEqual(n_sleep, 3)
     assertEqual(guard_id, 99)
     assertEqual(minute, 45)
+
+    print("Tests passed")
 
 test()
