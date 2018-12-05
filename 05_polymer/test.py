@@ -12,10 +12,10 @@ def assertEqual(x, y):
 def test():
     polymer = "dabAcCaCBAcCcaDA"
 
-    r = reacted(polymer)
-    assertEqual("".join(r), "dabCBAcaDA")
+    r = reacted(map(ord, polymer))
+    assertEqual("".join(map(chr, r)), "dabCBAcaDA")
     assertEqual(len(r), 10)
-    assertEqual(part2(polymer), 4)
+    assertEqual(part2(r), 4)
 
     print("Tests passed")
 
