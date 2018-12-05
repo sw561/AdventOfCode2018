@@ -3,3 +3,4 @@
 ./02_inventory/checksum.py | diff 02_inventory/output.txt -
 ./03_fabric_cutting/overlapping.py | diff 03_fabric_cutting/output.txt -
 ./04_guards/guard.py | diff 04_guards/output.txt -
+./05_polymer/polymer.py | diff 05_polymer/output.txt -
