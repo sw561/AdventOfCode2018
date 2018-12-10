@@ -46,7 +46,7 @@ def test2():
     assertEqual(count, 16)
 
 with open("06_voronoi/test_input.txt", 'r') as f:
-    points = [[int(x) for x in line.split(',')] for line in f]
+    points = [tuple(int(x) for x in line.split(',')) for line in f]
 with open("06_voronoi/test_output.txt", 'r') as f:
     test_output = f.read()
 test1()
