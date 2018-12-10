@@ -34,23 +34,25 @@ def part1(requirements, required_by, h):
             if not requirements[c]:
                 heappush(h, c)
 
-def part2(requirements, required_by, h, n_workers=5, worker_time=60):
+def part2(requirements, required_by, h, n_workers=5, worker_time=60, verbose=False):
 
-    workers_busy = 1
+    workers_busy = 0
 
     # Heap of (time, task_completions) to be processed
     time_heap = [(0, None)]
 
     while time_heap:
         time, complete = heappop(time_heap)
-        workers_busy -= 1
 
         # Process newly completed job
         if complete is not None:
+            workers_busy -= 1
             for c in required_by[complete]:
                 requirements[c].remove(complete)
                 if not requirements[c]:
                     heappush(h, c)
+            if verbose:
+                print("Time: {:4d} - Completed job {}".format(time, complete))
 
         # Assign new tasks
         while h and workers_busy < n_workers:

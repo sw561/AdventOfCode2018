@@ -24,5 +24,5 @@ requirements, required_by, h = make_dicts(tasks)
 
 test1(deepcopy(requirements), deepcopy(required_by), deepcopy(h))
 test2(deepcopy(requirements), deepcopy(required_by), deepcopy(h),
-    n_workers=2, worker_time=0
+    n_workers=2, worker_time=0, verbose=True
     )
