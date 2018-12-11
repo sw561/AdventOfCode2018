@@ -1,42 +1,22 @@
 #!/usr/bin/env python3
 
-# Indices used for node objects
-#
-# X = 0
-# N = 1
-# P = 2
+from collections import deque
 
-def one_round(head, end):
-    head = head[1]
-    for i in range(end-22, end-1):
-        after = head[1]
-        new = [i, after, head]
-        after[2] = new
-        head[1] = new
-        head = after
-    i = end-1
-    after = head[1]
-    new = [i, after, head]
-    after[2] = new
-    head[1] = new
-
-    for i in range(6):
-        head = head[2]
-
-    # Remove head and return the data corresponding to head
-    data, after, before = head
-    before[1] = after
-    after[2] = before
-    return after, data
-
-def solve(players, last):
-    head = [0, None, None]
-    head[1] = head
-    head[2] = head
-    points = [0]*players
+def play(last):
+    game = deque([0])
 
     for i in range(23, last+1, 23):
-        head, x = one_round(head, i)
+        for j in range(i-22, i):
+            game.rotate(-1)
+            game.append(j)
+        game.rotate(7)
+        yield i, game.pop()
+        game.rotate(-1)
+
+def solve(players, last):
+    points = [0]*players
+
+    for i, x in play(last):
         points[i % players] += i + x
 
     return max(points)
