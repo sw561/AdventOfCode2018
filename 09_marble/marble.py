@@ -1,75 +1,42 @@
 #!/usr/bin/env python3
 
-class Node:
-    __slots__ = 'x', 'n', 'p'
-    def __init__(self, x, n=None, p=None):
-        self.x = x
-        self.n = n
-        self.p = p
+# Indices used for node objects
+#
+# X = 0
+# N = 1
+# P = 2
 
-    def __str__(self):
-        return str(self.x)
+def one_round(head, end):
+    head = head[1]
+    for i in range(end-22, end-1):
+        after = head[1]
+        new = [i, after, head]
+        after[2] = new
+        head[1] = new
+        head = after
+    i = end-1
+    after = head[1]
+    new = [i, after, head]
+    after[2] = new
+    head[1] = new
 
-class Circular_List:
-    def __init__(self, x):
-        self.head = Node(x)
-        self.head.n = self.head
-        self.head.p = self.head
+    for i in range(6):
+        head = head[2]
 
-    def rotate(self, i):
-        if self.head is None:
-            raise Exception("Can't rotate empty list")
-        if i > 0:
-            for _ in range(i):
-                self.head = self.head.n
-        else:
-            for _ in range(-i):
-                self.head = self.head.p
-
-    def insert(self, x):
-        # Insert new node with data x after head
-        after = self.head.n
-        new = Node(x, after, self.head)
-        after.p = new
-        self.head.n = new
-        self.head = new
-
-    def pop(self):
-        # Remove head and return the data corresponding to head
-        before, data, after = self.head.p, self.head.x, self.head.n
-        before.n = after
-        after.p = before
-        self.head = after
-        return data
-
-    def __iter__(self):
-        node = self.head
-        yield node
-        while node.n != self.head:
-            node = node.n
-            yield node
-
-    def __str__(self):
-        return " ".join(map(str, iter(self)))
-
-def play(last):
-    game = Circular_List(0)
-
-    for i in range(1, last+1):
-        if i%23:
-            game.rotate(1)
-            game.insert(i)
-            # game.rotate(1)
-        else:
-            game.rotate(-7)
-            yield i, game.pop()
-
-    # print(game)
+    # Remove head and return the data corresponding to head
+    data, after, before = head
+    before[1] = after
+    after[2] = before
+    return after, data
 
 def solve(players, last):
+    head = [0, None, None]
+    head[1] = head
+    head[2] = head
     points = [0]*players
 
-    for i, x in play(last):
+    for i in range(23, last+1, 23):
+        head, x = one_round(head, i)
         points[i % players] += i + x
 
     return max(points)

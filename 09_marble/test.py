@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from marble import process, solve, Circular_List
+from marble import process, solve
 
 def assertEqual(x, y):
     try:
