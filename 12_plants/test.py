@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from plants import process, State
+from plants import process, State, deque
 
 def assertEqual(x, y):
     try:
@@ -12,14 +12,13 @@ def assertEqual(x, y):
 if __name__=="__main__":
     d, state_string = process("12_plants/test_input.txt")
 
-    state = State(0, len(state_string))
-    state.initialise(state_string)
+    state = State(0, deque(state_string))
     print(" 0: {}".format(state))
 
     with open("12_plants/test_output.txt", 'r') as f:
         u = [x.strip() for x in f]
 
-    for i, output in zip(range(20), u[1:]):
+    for i, output in enumerate(u[1:]):
         state = state.evolve(d)
         print("{:2d}: {}".format(i+1, state))
 

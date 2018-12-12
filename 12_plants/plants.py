@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
-from itertools import chain
+from collections import deque
+from itertools import count
 
 def process(fname):
     d = dict()
     with open(fname, 'r') as f:
         for line in f:
             if line.startswith("initial state"):
-                state_string = [x for x in line[14:].strip()]
+                state_string = line[14:].strip()
             else:
                 u = line.split()
                 if u:
@@ -16,62 +17,70 @@ def process(fname):
     return d, state_string
 
 class State:
-    def __init__(self, l, r):
-        self.ls = ['.']*l
-        self.rs = ['.']*r
+    def __init__(self, i, d):
+        # i is index corresponding to first element in d
+        # d is a deque with '.' or '#' for dead and live plants
+        self.i = i
+        self.d = d
 
-    def initialise(self, state_string):
-        # Use state in form of string
-        for i, x in enumerate(state_string):
-            self.rs[i] = x
-
-    def copy(self):
-        # Only copy sizes of arrays
-        return State(len(self.ls), len(self.rs))
+    def __iter__(self):
+        # yield plant states with ends as required for use in evolve
+        yield from self.d
+        for _ in range(4):
+            yield '.'
 
     def __str__(self):
-        return "".join(x for x in chain(reversed(self.ls), self.rs))
+        return "{:3d} {}".format(self.i, "".join(iter(self.d)))
 
-    def helper(self, i):
-        if i < 0:
-            index = -i-1
-            x = self.ls
-        else:
-            index = i
-            x = self.rs
-        return index, x
+    def evolve(self, translate):
+        new_i = self.i - 2
+        new_d = deque()
 
-    def __getitem__(self, i):
-        index, x = self.helper(i)
-        if index >= len(x):
-            return '.'
-        else:
-            return x[index]
+        temp = deque('.....', maxlen=5)
+        for x in iter(self):
+            temp.append(x)
+            new_d.append(translate.get("".join(temp), '.'))
 
-    def __setitem__(self, i, val):
-        index, x = self.helper(i)
-        while index >= len(x):
-            if val == '.':
-                return
-            x.append('.')
-        x[index] = val
+        while new_d[0] == '.':
+            new_d.popleft()
+            new_i += 1
 
-    def evolve(self, d):
-        new = self.copy()
-        for i in range(-len(self.ls)-2, len(self.rs)+2):
-            new[i] = d.get("".join(self[j] for j in range(i-2, i+3)), '.')
-        return new
+        while new_d[-1] == '.':
+            new_d.pop()
+
+        return State(new_i, new_d)
 
     def sum(self):
-        return sum(i for i in range(-len(self.ls), len(self.rs)) if self[i]=='#')
+        return sum(i for i, x in zip(count(start=self.i), self.d) if x == '#')
+
+def sum_generator(state, translate):
+    i = 0
+    while True:
+        state = state.evolve(translate)
+        i += 1
+        s = state.sum()
+        # Print here to see visually what is happening
+        # print(i, state, s)
+        yield i, s
 
 if __name__=="__main__":
     d, state_string = process("12_plants/input.txt")
 
-    # Part 1
-    state = State(0, len(state_string))
-    state.initialise(state_string)
+    state = State(0, deque(state_string))
+    g = sum_generator(state, d)
 
+    # part 1
     for _ in range(20):
-        state = state.evolve(d)
-    print(state.sum())
+        x = next(g)
+    print(x[1])
+
+    # part 2
+    sums = deque(maxlen=4)
+    # Continue until the sums are consistenly changing linearly
+    while len(sums) < 4 or not all(sums[i] == sums[0] + i*(sums[1] - sums[0]) for i in range(2, len(sums))):
+
+        i, x = next(g)
+        sums.append(x)
+
+    final_value = sums[-1] + (sums[1] - sums[0]) * (int(5e10) - i)
+    print(final_value)
