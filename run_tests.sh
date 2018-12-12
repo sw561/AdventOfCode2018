@@ -10,3 +10,4 @@
 ./09_marble/marble.py | diff 09_marble/output.txt -
 ./10_stars/stars_align.py | diff 10_stars/output.txt -
 ./11_fuel_cell/power.py | diff 11_fuel_cell/output.txt -
+./12_plants/plants.py | diff 12_plants/output.txt -
