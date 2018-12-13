@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 
-from itertools import chain
-
-translate = {">": "-", "<": "-", "v": "|", "^": "|"}
+orientation = {">": "-", "<": "-", "v": "|", "^": "|"}
 
 def process(track):
     # Return position and direction of carts,
@@ -10,38 +8,50 @@ def process(track):
 
     # list of (position, direction, number_of_intersections_passed) tuples
     carts = []
-    occupied = set()
     new_track = [[" "]*len(track[0]) for _ in range(len(track))]
     for i, line in enumerate(track):
         for j, piece in enumerate(line):
 
-            if piece not in translate:
+            if piece not in orientation:
                 new_track[i][j] = piece
             else:
                 carts.append(((i, j), piece, 0))
-                occupied.add((i, j))
-                new_track[i][j] = translate[piece]
+                new_track[i][j] = orientation[piece]
 
-    return new_track, carts, occupied
+    return new_track, carts
 
-def new_position(i, j, direction):
-    if direction == ">":
-        return i, j+1
-    elif direction == "<":
-        return i, j-1
-    elif direction == "v":
-        return i+1, j
-    elif direction == "^":
-        return i-1, j
+new_position_func_dict = {
+    ">": lambda x: (x[0], x[1]+1),
+    "<": lambda x: (x[0], x[1]-1),
+    "v": lambda x: (x[0]+1, x[1]),
+    "^": lambda x: (x[0]-1, x[1]),
+}
 
 u = ["^", ">", "v", "<"]
-def turn_right(direction):
-    i = (u.index(direction) + 1) % 4
-    return u[i]
+turn_right_dict = {u[i]: u[(i+1)%4] for i in range(4)}
+turn_left_dict = {u[i]: u[(i-1)%4] for i in range(4)}
 
-def turn_left(direction):
-    i = (u.index(direction) - 1) % 4
-    return u[i]
+def update_dn(track, direction, n):
+    if track == "/":
+        if orientation[direction] == "|":
+            direction = turn_right_dict[direction]
+        else:
+            direction = turn_left_dict[direction]
+
+    elif track == "\\":
+        if orientation[direction] == "|":
+            direction = turn_left_dict[direction]
+        else:
+            direction = turn_right_dict[direction]
+
+    elif track == "+":
+        if n%3 == 0:
+            direction = turn_left_dict[direction]
+        elif n%3 == 2:
+            direction = turn_right_dict[direction]
+
+        n += 1
+    return direction, n
 
 def remove(pos, carts, new_carts):
     for search_list in [carts, new_carts]:
@@ -53,7 +63,6 @@ def remove(pos, carts, new_carts):
     raise Exception("remove function did not find the cart")
 
 first_crash = True
-
 def move(track, carts, occupied):
     global first_crash
     new_carts = []
@@ -61,45 +70,27 @@ def move(track, carts, occupied):
     carts.sort(reverse=True)
 
     while carts:
-        ((i, j), direction, n) = carts.pop()
-        occupied.remove((i, j))
+        (pos, direction, n) = carts.pop()
+        occupied.remove(pos)
 
-        i, j = new_position(i, j, direction)
+        pos = new_position_func_dict[direction](pos)
 
-        if (i, j) in occupied:
+        if pos in occupied:
             if first_crash:
-                print("{},{}".format(j, i))
+                print("{},{}".format(pos[1], pos[0]))
                 first_crash = False
 
-            occupied.remove((i, j))
+            occupied.remove(pos)
             # Need to remove cart that was crashed into. This cart could be in
             # carts or new_carts.
-            remove((i, j), carts, new_carts)
+            remove(pos, carts, new_carts)
 
         else:
             # No crash, update details and add to new_carts
-            if track[i][j] == "/":
-                if translate[direction] == "|":
-                    direction = turn_right(direction)
-                else:
-                    direction = turn_left(direction)
+            direction, n = update_dn(track[pos[0]][pos[1]], direction, n)
 
-            elif track[i][j] == "\\":
-                if translate[direction] == "|":
-                    direction = turn_left(direction)
-                else:
-                    direction = turn_right(direction)
-
-            elif track[i][j] == "+":
-                if n%3 == 0:
-                    direction = turn_left(direction)
-                elif n%3 == 2:
-                    direction = turn_right(direction)
-
-                n += 1
-
-            occupied.add((i, j))
-            new_carts.append(((i, j), direction, n))
+            occupied.add(pos)
+            new_carts.append((pos, direction, n))
 
     return new_carts
 
@@ -107,11 +98,10 @@ if __name__=="__main__":
     with open("13_mine_cart/input.txt", 'r') as f:
         track = [[x for x in line if x!="\n"] for line in f]
 
-    track, carts, occupied = process(track)
+    track, carts = process(track)
+    occupied = set(cart[0] for cart in carts)
 
-    while carts is not None:
+    while len(carts) > 1:
         carts = move(track, carts, occupied)
 
-        if len(carts) == 1:
-            print("{},{}".format(carts[0][0][1], carts[0][0][0]))
-            break
+    print("{},{}".format(carts[0][0][1], carts[0][0][0]))
