@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from recipes import part1, part2
+from recipes import solve
 
 def assertEqual(x, y):
     try:
@@ -16,14 +16,9 @@ tests = [
 (2018, "5941429882"),
 ]
 
-def test1():
-    for i, o in tests:
-        assertEqual("".join(map(str, part1(i))), o)
+def test():
+    for n, digits in tests:
+        r = solve([int(x) for x in digits])
+        assertEqual(len(r), n + len(digits))
 
-def test2():
-    for o, i in tests:
-        r = part2([int(x) for x in i])
-        assertEqual(len(r) - len(i), o)
-
-test1()
-test2()
+test()
