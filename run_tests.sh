@@ -12,3 +12,4 @@
 ./11_fuel_cell/power.py | diff 11_fuel_cell/output.txt -
 ./12_plants/plants.py | diff 12_plants/output.txt -
 ./13_mine_cart/mine.py | diff 13_mine_cart/output.txt -
+./14_recipes/recipes.py | diff 14_recipes/output.txt -
