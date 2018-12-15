@@ -14,13 +14,13 @@ def process_grid(inp):
             elif inp[i][j] in ['G', 'E']:
                 agents.append(((i, j), inp[i][j], 200))
 
-            grid[i][j] = '.'
+            grid[i][j] = ' '
 
     grid = ["".join(row) for row in grid]
 
     return grid, agents
 
-def gen_neighbours(i, j):
+def neighbours(i, j):
     yield i-1, j
     yield i, j-1
     yield i, j+1
@@ -29,7 +29,7 @@ def gen_neighbours(i, j):
 class Game:
     def __init__(self, grid, agents):
         self.grid = grid
-        self.agents = agents
+        self.agents = agents.copy()
         # set of squares occupied by agents
         self.occupied = {agent[0]: i for i, agent in enumerate(agents)}
 
@@ -48,14 +48,9 @@ class Game:
             # Agent dies
             del self.occupied[pos]
 
-    def targets_remaining(self):
-        types = set()
-        for agent in self.agents:
-            if agent[2] > 0:
-                types.add(agent[1])
-            if len(types) > 1:
-                return True
-        return False
+    def targets_remaining(self, t):
+        # Find an agent with type not equal to t
+        return any(agent[2] > 0 and agent[1] != t for agent in self.agents)
 
     def total_hitpoints(self):
         return sum(agent[2] for agent in self.agents if agent[2] > 0)
@@ -65,36 +60,27 @@ class Game:
         ids = sorted(range(len(self.agents)), key=lambda i: self.agents[i][0])
         return ids
 
-    def neighbours(self, i, j):
-        for i, j in gen_neighbours(i, j):
-            if self.grid[i][j] == '.' and (i, j) not in self.occupied:
+    def neighbouring_spaces(self, i, j):
+        for i, j in neighbours(i, j):
+            if self.grid[i][j] == ' ' and (i, j) not in self.occupied:
                 yield i, j
 
-    def enemies(self, agent_id):
+    def target_squares(self, agent_id):
         t = self.agents[agent_id][1]
         for agent in self.agents:
             if agent[1] != t and agent[2] > 0:
-                yield agent
-
-    def target_squares(self, agent_id):
-        for agent in self.enemies(agent_id):
-            yield from self.neighbours(*agent[0])
+                yield from self.neighbouring_spaces(*agent[0])
 
     def nearby_enemies(self, agent_id):
         pos, t, h = self.agents[agent_id]
 
-        for n in gen_neighbours(*pos):
+        for n in neighbours(*pos):
             n_agent_id = self.occupied.get(n, None)
-            if n_agent_id is None:
-                continue
-            if self.agents[n_agent_id][1] != t:
+            if n_agent_id is not None and self.agents[n_agent_id][1] != t:
                 yield n_agent_id
 
     def weakest_nearby_enemy(self, agent_id):
-        try:
-            return min(self.nearby_enemies(agent_id), key=lambda i: self.agents[i][2])
-        except ValueError:
-            return None
+        return min(self.nearby_enemies(agent_id), key=lambda i: self.agents[i][2], default=None)
 
     def in_range(self, agent_id):
         # Return true if agent is in range and can attack
@@ -123,7 +109,7 @@ class Game:
                 agent = self.agents[agent_id]
                 print("{}({})".format(agent[1], agent[2]), end=' ')
 
-            print(" ")
+            print(' ')
 
 def find_move(game, agent_id):
 
@@ -146,12 +132,12 @@ def find_move(game, agent_id):
         d += 1
         new_pos = []
         for p in pos:
-            for n in game.neighbours(*p):
+            for n in game.neighbouring_spaces(*p):
                 if distance[n[0]][n[1]] == -1:
                     new_pos.append(n)
                     distance[n[0]][n[1]] = d
 
-                if n in targets and n not in found_targets:
+                if n in targets:
                     found_targets.add(n)
 
         pos = new_pos
@@ -173,7 +159,7 @@ def find_move(game, agent_id):
     while d > 1:
         new_pos = set()
         for p in pos:
-            for n in gen_neighbours(*p):
+            for n in neighbours(*p):
                 if distance[n[0]][n[1]] == d-1:
                     new_pos.add(n)
 
@@ -181,12 +167,11 @@ def find_move(game, agent_id):
         d -= 1
 
     # pos is now set of good first moves
-
     destination = min(pos)
 
     return destination
 
-def play(grid, agents, verbose=False):
+def play(grid, agents, elf_attack=3, verbose=False):
     round_counter = 0
     g = Game(grid, agents)
 
@@ -200,7 +185,7 @@ def play(grid, agents, verbose=False):
             if g.agents[agent_id][2] <= 0:
                 continue
 
-            if not g.targets_remaining():
+            if not g.targets_remaining(g.agents[agent_id][1]):
                 return round_counter, g
 
             if not g.in_range(agent_id):
@@ -215,25 +200,23 @@ def play(grid, agents, verbose=False):
             # Attack a weak enemy
             w = g.weakest_nearby_enemy(agent_id)
             if w is not None:
-                g.damage(w, 3)
+                g.damage(w, elf_attack if g.agents[agent_id]=='E' else 3)
 
         round_counter += 1
         if verbose:
             print("\nRound: {}".format(round_counter))
             g.display()
 
-def part1(fname, verbose=False):
-    with open(fname, 'r') as f:
-        inp = [[x for x in line.strip()] for line in f]
+if __name__=="__main__":
+    with open("15_elves_goblins/input.txt", 'r') as f:
+        inp = [line.strip() for line in f]
 
     grid, agents = process_grid(inp)
 
-    round_counter, g = play(grid, agents, verbose=verbose)
-    if verbose:
-        print("\nRound: {}".format(round_counter))
-        g.display()
-    return round_counter, g.total_hitpoints()
+    # Part 1
+    round_counter, g = play(grid, agents)
+    # print("\nRound: {}".format(round_counter))
+    # g.display()
+    print(round_counter * g.total_hitpoints())
 
-if __name__=="__main__":
-    round_counter, hit_points = part1("15_elves_goblins/input.txt")
-    print(round_counter * hit_points)
+    # Part 2
