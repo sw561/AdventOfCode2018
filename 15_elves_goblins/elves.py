@@ -128,16 +128,15 @@ class Game:
 def find_move(game, agent_id):
 
     targets = set(game.target_squares(agent_id))
-    # print("Candidate targets: {}".format(targets))
 
     if not targets:
         # No target squares available
         return None
 
-    distance = [[-1]*len(game.grid[0]) for _ in game.grid]
+    distance = dict()
 
     start = game.agents[agent_id].pos
-    distance[start[0]][start[1]] = 0
+    distance[start] = 0
     pos = [start]
     d = 0
 
@@ -147,9 +146,9 @@ def find_move(game, agent_id):
         new_pos = []
         for p in pos:
             for n in game.neighbouring_spaces(*p):
-                if distance[n[0]][n[1]] == -1:
+                if n not in distance:
                     new_pos.append(n)
-                    distance[n[0]][n[1]] = d
+                    distance[n] = d
 
                 if n in targets:
                     found_targets.add(n)
@@ -160,12 +159,7 @@ def find_move(game, agent_id):
         # Cannot reach any targets
         return None
 
-    # for row in distance:
-    #     print(" ".join("{:2d}".format(x) if x >= 0 else '  ' for x in row))
-    # print(found_targets)
-
     target = min(found_targets)
-    # print("target: {}".format(target))
 
     # Now need to search backwards to establish the route
     pos = set([target])
@@ -174,7 +168,7 @@ def find_move(game, agent_id):
         new_pos = set()
         for p in pos:
             for n in neighbours(*p):
-                if distance[n[0]][n[1]] == d-1:
+                if n in distance and distance[n] == d-1:
                     new_pos.add(n)
 
         pos = new_pos
@@ -202,13 +196,9 @@ def play(grid, agents, elf_attack=3, verbose=False):
                 return round_counter, g
 
             if not g.in_range(agent_id):
-                # print("Moving agent {} at {}".format(agent_id, g.agents[agent_id][0]), end=' ')
                 destination = find_move(g, agent_id)
                 if destination is not None:
-                    # print("to {}".format(destination))
                     g.move(agent_id, destination)
-                # else:
-                #     print("actually no")
 
             # Attack a weak enemy
             w = g.weakest_nearby_enemy(agent_id)
