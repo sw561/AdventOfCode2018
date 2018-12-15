@@ -13,3 +13,4 @@
 ./12_plants/plants.py | diff 12_plants/output.txt -
 ./13_mine_cart/mine.py | diff 13_mine_cart/output.txt -
 ./14_recipes/recipes.py | diff 14_recipes/output.txt -
+./15_elves_goblins/elves.py | diff 15_elves_goblins/output.txt -
