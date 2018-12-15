@@ -80,7 +80,9 @@ class Game:
                 yield n_agent_id
 
     def weakest_nearby_enemy(self, agent_id):
-        return min(self.nearby_enemies(agent_id), key=lambda i: self.agents[i][2], default=None)
+        return min(self.nearby_enemies(agent_id),
+            key=lambda i: (self.agents[i][2], self.agents[i][0]),
+            default=None)
 
     def in_range(self, agent_id):
         # Return true if agent is in range and can attack
