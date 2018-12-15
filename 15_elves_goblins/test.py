@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from elves import process_grid, play
+from elves import process_grid, play, n_elf_survivors, bisection
 
 def assertEqual(x, y):
     try:
@@ -9,16 +9,23 @@ def assertEqual(x, y):
         print("{} != {}".format(x, y))
         raise
 
-def test1(fname):
+def test(fname):
     with open(fname, 'r') as f:
         inp = [line.strip() for line in f]
 
     grid, agents = process_grid(inp)
 
-    round_counter, g = play(grid, agents)
+    round_counter, game = play(grid, agents)
     print("\nRound: {}".format(round_counter))
-    g.display()
-    return round_counter, g.total_hitpoints()
+    game.display()
 
-assertEqual(test1("15_elves_goblins/test_input2.txt"), (47, 590))
-assertEqual(test1("15_elves_goblins/test_input3.txt"), (37, 982))
+    n_elves = sum(agent[1] == 'E' for agent in agents)
+
+    elf_attack = bisection(
+        lambda x: n_elf_survivors(grid, agents, x) == n_elves, 3, 50
+        )
+
+    return round_counter, game.total_hitpoints(), elf_attack
+
+assertEqual(test("15_elves_goblins/test_input1.txt"), (47, 590, 15))
+assertEqual(test("15_elves_goblins/test_input2.txt"), (37, 982, 4))

@@ -200,12 +200,33 @@ def play(grid, agents, elf_attack=3, verbose=False):
             # Attack a weak enemy
             w = g.weakest_nearby_enemy(agent_id)
             if w is not None:
-                g.damage(w, elf_attack if g.agents[agent_id]=='E' else 3)
+                g.damage(w, elf_attack if g.agents[agent_id][1]=='E' else 3)
 
         round_counter += 1
         if verbose:
             print("\nRound: {}".format(round_counter))
             g.display()
+
+def n_elf_survivors(grid, agents, elf_attack):
+    r, g = play(grid, agents, elf_attack=elf_attack)
+
+    n_alive = sum(agent[1] == 'E' for agent in g.agents if agent[2] > 0)
+    return n_alive
+
+def bisection(f, left, right):
+    # Find smallest value i s.t. f(i) = True
+
+    assert f(left) is False
+    assert f(right) is True
+
+    while right - left > 1:
+        m = (left + right) // 2
+        if f(m):
+            right = m
+        else:
+            left = m
+
+    return right
 
 if __name__=="__main__":
     with open("15_elves_goblins/input.txt", 'r') as f:
@@ -214,9 +235,19 @@ if __name__=="__main__":
     grid, agents = process_grid(inp)
 
     # Part 1
-    round_counter, g = play(grid, agents)
+    round_counter, game = play(grid, agents)
     # print("\nRound: {}".format(round_counter))
-    # g.display()
-    print(round_counter * g.total_hitpoints())
+    # game.display()
+    print(round_counter * game.total_hitpoints())
 
     # Part 2
+    n_elves = sum(agent[1] == 'E' for agent in agents)
+
+    elf_attack = bisection(
+        lambda x: n_elf_survivors(grid, agents, x) == n_elves, 3, 50
+        )
+
+    round_counter, game = play(grid, agents, elf_attack=elf_attack)
+    # print("\nelf_attack = {} Round: {}".format(elf_attack, round_counter))
+    # game.display()
+    print(round_counter * game.total_hitpoints())
