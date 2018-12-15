@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+from copy import deepcopy
+from itertools import count
+
 def process_grid(inp):
     # return grid without agents in the way
     # also return list of agents in the form ((x_pos, y_pos), type, hit_points)
@@ -12,7 +15,7 @@ def process_grid(inp):
             if inp[i][j] == '#':
                 continue
             elif inp[i][j] in ['G', 'E']:
-                agents.append(((i, j), inp[i][j], 200))
+                agents.append(Agent((i, j), inp[i][j]))
 
             grid[i][j] = ' '
 
@@ -26,38 +29,49 @@ def neighbours(i, j):
     yield i, j+1
     yield i+1, j
 
+class Agent:
+    def __init__(self, pos, t, hit_points=200):
+        self.pos = pos
+        self.t = t
+        self.hit_points = hit_points
+
+    def live(self):
+        return self.hit_points > 0
+
+    def __str__(self):
+        return "{}({})".format(self.t, self.hit_points)
+
 class Game:
     def __init__(self, grid, agents):
         self.grid = grid
-        self.agents = agents.copy()
+        self.agents = deepcopy(agents)
         # set of squares occupied by agents
-        self.occupied = {agent[0]: i for i, agent in enumerate(agents)}
+        self.occupied = {agent.pos: i for i, agent in enumerate(agents)}
 
     def move(self, agent_id, pos):
-        old_pos, t, hit_points = self.agents[agent_id]
+        old_pos = self.agents[agent_id].pos
         del self.occupied[old_pos]
 
-        self.agents[agent_id] = (pos, t, hit_points)
+        self.agents[agent_id].pos = pos
         self.occupied[pos] = agent_id
 
     def damage(self, agent_id, attack):
-        pos, t, hit_points = self.agents[agent_id]
-        self.agents[agent_id] = (pos, t, hit_points - attack)
+        self.agents[agent_id].hit_points -= attack
 
-        if hit_points - attack <= 0:
+        if not self.agents[agent_id].live():
             # Agent dies
-            del self.occupied[pos]
+            del self.occupied[self.agents[agent_id].pos]
 
     def targets_remaining(self, t):
         # Find an agent with type not equal to t
-        return any(agent[2] > 0 and agent[1] != t for agent in self.agents)
+        return any(agent.live() and agent.t != t for agent in self.agents)
 
     def total_hitpoints(self):
-        return sum(agent[2] for agent in self.agents if agent[2] > 0)
+        return sum(agent.hit_points for agent in self.agents if agent.live())
 
     def agent_ids(self):
         # Yield agent_ids in 'read-order' according to position
-        ids = sorted(range(len(self.agents)), key=lambda i: self.agents[i][0])
+        ids = sorted(range(len(self.agents)), key=lambda i: self.agents[i].pos)
         return ids
 
     def neighbouring_spaces(self, i, j):
@@ -66,22 +80,22 @@ class Game:
                 yield i, j
 
     def target_squares(self, agent_id):
-        t = self.agents[agent_id][1]
+        t = self.agents[agent_id].t
         for agent in self.agents:
-            if agent[1] != t and agent[2] > 0:
-                yield from self.neighbouring_spaces(*agent[0])
+            if agent.t != t and agent.live():
+                yield from self.neighbouring_spaces(*agent.pos)
 
     def nearby_enemies(self, agent_id):
-        pos, t, h = self.agents[agent_id]
+        pos, t = self.agents[agent_id].pos, self.agents[agent_id].t
 
         for n in neighbours(*pos):
             n_agent_id = self.occupied.get(n, None)
-            if n_agent_id is not None and self.agents[n_agent_id][1] != t:
+            if n_agent_id is not None and self.agents[n_agent_id].t != t:
                 yield n_agent_id
 
     def weakest_nearby_enemy(self, agent_id):
         return min(self.nearby_enemies(agent_id),
-            key=lambda i: (self.agents[i][2], self.agents[i][0]),
+            key=lambda i: (self.agents[i].hit_points, self.agents[i].pos),
             default=None)
 
     def in_range(self, agent_id):
@@ -93,25 +107,23 @@ class Game:
             return False
         return True
 
-    def display(self):
-        for i in range(len(self.grid)):
-            info_required = []
+    def display_row(self, i):
+        info_required = []
 
-            for j in range(len(self.grid[0])):
-                agent_id = self.occupied.get((i, j), None)
-                if agent_id is not None:
-                    print(self.agents[agent_id][1], end='')
-                    info_required.append(agent_id)
-                else:
-                    print(self.grid[i][j], end='')
+        for j in range(len(self.grid[0])):
+            agent_id = self.occupied.get((i, j), None)
+            if agent_id is not None:
+                yield self.agents[agent_id].t
+                info_required.append(agent_id)
+            else:
+                yield self.grid[i][j]
 
-            print(' ', end=' ')
+        for agent_id in info_required:
+            yield " "
+            yield str(self.agents[agent_id])
 
-            for agent_id in info_required:
-                agent = self.agents[agent_id]
-                print("{}({})".format(agent[1], agent[2]), end=' ')
-
-            print(' ')
+    def __str__(self):
+        return "\n".join("".join(self.display_row(i)) for i in range(len(self.grid)))
 
 def find_move(game, agent_id):
 
@@ -124,7 +136,7 @@ def find_move(game, agent_id):
 
     distance = [[-1]*len(game.grid[0]) for _ in game.grid]
 
-    start = game.agents[agent_id][0]
+    start = game.agents[agent_id].pos
     distance[start[0]][start[1]] = 0
     pos = [start]
     d = 0
@@ -174,20 +186,19 @@ def find_move(game, agent_id):
     return destination
 
 def play(grid, agents, elf_attack=3, verbose=False):
-    round_counter = 0
     g = Game(grid, agents)
 
-    if verbose:
-        print("\nRound: {}".format(round_counter))
-        g.display()
+    for round_counter in count():
+        if verbose:
+            print("\nRound: {}".format(round_counter))
+            print(g)
 
-    while True:
         for agent_id in g.agent_ids():
             # Check it's alive
-            if g.agents[agent_id][2] <= 0:
+            if not g.agents[agent_id].live():
                 continue
 
-            if not g.targets_remaining(g.agents[agent_id][1]):
+            if not g.targets_remaining(g.agents[agent_id].t):
                 return round_counter, g
 
             if not g.in_range(agent_id):
@@ -202,17 +213,12 @@ def play(grid, agents, elf_attack=3, verbose=False):
             # Attack a weak enemy
             w = g.weakest_nearby_enemy(agent_id)
             if w is not None:
-                g.damage(w, elf_attack if g.agents[agent_id][1]=='E' else 3)
-
-        round_counter += 1
-        if verbose:
-            print("\nRound: {}".format(round_counter))
-            g.display()
+                g.damage(w, elf_attack if g.agents[agent_id].t=='E' else 3)
 
 def n_elf_survivors(grid, agents, elf_attack):
     r, g = play(grid, agents, elf_attack=elf_attack)
 
-    n_alive = sum(agent[1] == 'E' for agent in g.agents if agent[2] > 0)
+    n_alive = sum(agent.t == 'E' for agent in g.agents if agent.live())
     return n_alive
 
 def bisection(f, left, right):
@@ -239,11 +245,11 @@ if __name__=="__main__":
     # Part 1
     round_counter, game = play(grid, agents)
     # print("\nRound: {}".format(round_counter))
-    # game.display()
+    # print(game)
     print(round_counter * game.total_hitpoints())
 
     # Part 2
-    n_elves = sum(agent[1] == 'E' for agent in agents)
+    n_elves = sum(agent.t == 'E' for agent in agents)
 
     elf_attack = bisection(
         lambda x: n_elf_survivors(grid, agents, x) == n_elves, 3, 50
@@ -251,5 +257,5 @@ if __name__=="__main__":
 
     round_counter, game = play(grid, agents, elf_attack=elf_attack)
     # print("\nelf_attack = {} Round: {}".format(elf_attack, round_counter))
-    # game.display()
+    # print(game)
     print(round_counter * game.total_hitpoints())

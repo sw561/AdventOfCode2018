@@ -17,9 +17,9 @@ def test(fname):
 
     round_counter, game = play(grid, agents)
     print("\nRound: {}".format(round_counter))
-    game.display()
+    print(game)
 
-    n_elves = sum(agent[1] == 'E' for agent in agents)
+    n_elves = sum(agent.t == 'E' for agent in agents)
 
     elf_attack = bisection(
         lambda x: n_elf_survivors(grid, agents, x) == n_elves, 3, 50
