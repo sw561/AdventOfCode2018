@@ -14,3 +14,4 @@
 ./13_mine_cart/mine.py | diff 13_mine_cart/output.txt -
 ./14_recipes/recipes.py | diff 14_recipes/output.txt -
 ./15_elves_goblins/elves.py | diff 15_elves_goblins/output.txt -
+./16_reverse_assembly/code.py | diff 16_reverse_assembly/output.txt -
