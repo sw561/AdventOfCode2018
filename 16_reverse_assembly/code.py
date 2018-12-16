@@ -3,11 +3,11 @@
 funcs = {}
 
 class Func:
-    def __init__(self, f, a_reg=0, b_reg=0):
+    def __init__(self, f, name, a_reg=0, b_reg=0):
         self.f = f
         self.a_reg = a_reg
         self.b_reg = b_reg
-        self.__name__ = f.__name__
+        self.__name__ = name
 
     def __call__(self, register, a, b, c):
         if self.a_reg:
@@ -33,7 +33,7 @@ def make_variants(a, b):
                 if name.endswith("ii"):
                     continue
 
-                funcs[name] = Func(f, a_reg, b_reg)
+                funcs[name] = Func(f, name, a_reg, b_reg)
     return decorate
 
 @make_variants(0, 1)
