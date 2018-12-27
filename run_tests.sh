@@ -15,3 +15,4 @@
 ./14_recipes/recipes.py | diff 14_recipes/output.txt -
 ./15_elves_goblins/elves.py | diff 15_elves_goblins/output.txt -
 ./16_reverse_assembly/code.py | diff 16_reverse_assembly/output.txt -
+./17_water/flow.py | diff 17_water/output.txt -
