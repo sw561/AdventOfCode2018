@@ -83,15 +83,13 @@ def flood_fill(grid, x, y):
             if grid.get(xi, y) == '.' and grid.get(xi, y+1) == '.':
                 grid.set(xi, y, '|')
                 overflow.append((xi, y))
+                done = True
 
             elif grid.get(xi, y) == '|':
                 done = True
 
-        if overflow:
-            return overflow
-
         if done:
-            return []
+            return overflow
 
         # No outflow, set the squares to ~
         for xi in range(xmin, xmax+1):
