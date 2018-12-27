@@ -42,7 +42,9 @@ class Grid:
         self.grid[y][x - self.xmin] = val
 
     def count_water(self):
-        return sum(char in ['|', '~'] for row in self.grid[self.ymin:] for char in row)
+        reachable = sum(char == '|' for row in self.grid[self.ymin:] for char in row)
+        standing = sum(char == '~' for row in self.grid[self.ymin:] for char in row)
+        return reachable, standing
 
     def __str__(self):
         return "\n".join("".join(row) for row in self.grid) + "\n--------------------------"
@@ -66,12 +68,16 @@ def flood_fill(grid, x, y):
 
         # Expand horizontally from x, y
         # print("Horizontal expansion from x, y = {}, {}".format(x, y))
-        grid.set(x, y, '~')
+        grid.set(x, y, '|')
+        xmin = x
+        xmax = x
 
         for inc_f in [lambda x: x-1, lambda x: x+1]:
             xi = inc_f(x)
             while grid.get(xi, y) != '#' and grid.get(xi, y+1) in ['#', '~']:
-                grid.set(xi, y, '~')
+                grid.set(xi, y, '|')
+                xmin = min(xmin, xi)
+                xmax = max(xmax, xi)
                 xi = inc_f(xi)
 
             if grid.get(xi, y) == '.' and grid.get(xi, y+1) == '.':
@@ -86,6 +92,10 @@ def flood_fill(grid, x, y):
 
         if done:
             return []
+
+        # No outflow, set the squares to ~
+        for xi in range(xmin, xmax+1):
+            grid.set(xi, y, '~')
 
         # No outflow, go up one square
         y -= 1
@@ -105,26 +115,29 @@ def fill_water(grid):
         for c in overflow:
             d.append(c)
 
-        # with open("o", 'w') as g:
-        #     g.write(str(grid))
-
-        # print(d)
-        # input()
-
-if __name__=="__main__":
+def main(fname, verbose=False):
     clays = []
     pattern = re.compile("\\b\\d+\\b")
-    # with open("17_water/test_input.txt", 'r') as f:
-    with open("17_water/input.txt", 'r') as f:
+    with open(fname, 'r') as f:
         for line in f:
             x = re.findall(pattern, line)
             clays.append(Clay(*map(int, x), vertical=line.startswith('x')))
 
     grid = Grid(clays)
-    # print(grid)
 
     fill_water(grid)
-    with open("o", 'w') as g:
-        g.write(str(grid))
 
-    print(grid.count_water())
+    if verbose:
+        print(grid)
+
+    # For visualisation
+    # with open("o", 'w') as g:
+    #     g.write(str(grid))
+
+    reachable, standing = grid.count_water()
+    # Part 1 and part 2
+    return reachable + standing, standing
+
+if __name__=="__main__":
+    for x in main("17_water/input.txt"):
+        print(x)
