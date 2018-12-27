@@ -18,10 +18,14 @@ def atleast(g, x, n):
 
 def adjacent(grid, i, j, n):
     for dx, dy in product([-1, 0, 1], repeat=2):
+        # Skip case where dx==0 and dy==0
         if dx+dy or dx*dy:
             x, y = i+dx, j+dy
             if 0 <= x < n and 0 <= y < n:
                 yield grid[y][x]
+
+def make_str(grid):
+    return "\n".join("".join(c for c in line) for line in grid)
 
 def evolve(n, grid, grid2):
     for j in range(n):
@@ -52,14 +56,14 @@ def evolve(n, grid, grid2):
                 else:
                     grid2[j][i] = OPEN
 
-def part1(grid):
+def resource_value(grid):
     trees = sum(c == TREES for line in grid for c in line)
     lumberyards = sum(c == LUMBERYARD for line in grid for c in line)
     return trees, lumberyards
 
-def main(fname):
+if __name__=="__main__":
     grid = []
-    with open(fname, 'r') as f:
+    with open("18_lumber/input.txt", 'r') as f:
         for line in f:
             grid.append([c for c in line.strip()])
 
@@ -68,14 +72,30 @@ def main(fname):
     # workspace for evolution
     grid2 = [[None]*n for _ in range(n)]
 
-    for i in range(10):
+    for i in range(1, 11):
         evolve(n, grid, grid2)
         grid, grid2 = grid2, grid
 
-    return grid
+    # Part 1
+    t, l = resource_value(grid)
+    print(t*l)
 
-if __name__=="__main__":
-    grid = main("18_lumber/input.txt")
+    seen = dict()
+    cycle_len = None
+    for i in range(11, int(1e9)):
+        evolve(n, grid, grid2)
+        grid, grid2 = grid2, grid
 
-    trees, lumberyards = part1(grid)
-    print(trees * lumberyards)
+        s = make_str(grid)
+        if s not in seen:
+            seen[s] = i
+        elif cycle_len is None:
+            # print("{} matches entry at {}".format(i, seen[s]))
+            # print("Found cycle of length {}".format(i - seen[s]))
+            cycle_len = i - seen[s]
+        else:
+            if (int(1e9) - i) % cycle_len == 0:
+                # Part 2
+                t, l = resource_value(grid)
+                print(t*l)
+                break
