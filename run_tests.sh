@@ -17,3 +17,4 @@
 ./16_reverse_assembly/code.py | diff 16_reverse_assembly/output.txt -
 ./17_water/flow.py | diff 17_water/output.txt -
 ./18_lumber/wood.py | diff 18_lumber/output.txt -
+./19_go_with_the_flow/code.py | diff 19_go_with_the_flow/output.txt -
