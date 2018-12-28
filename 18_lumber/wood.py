@@ -72,9 +72,11 @@ if __name__=="__main__":
     # workspace for evolution
     grid2 = [[None]*n for _ in range(n)]
 
-    for i in range(1, 11):
+    minute = 0
+    while minute < 10:
         evolve(n, grid, grid2)
         grid, grid2 = grid2, grid
+        minute += 1
 
     # Part 1
     t, l = resource_value(grid)
@@ -82,19 +84,20 @@ if __name__=="__main__":
 
     seen = dict()
     cycle_len = None
-    for i in range(11, int(1e9)):
+    while minute < int(1e9):
         evolve(n, grid, grid2)
         grid, grid2 = grid2, grid
+        minute += 1
 
         s = make_str(grid)
         if s not in seen:
-            seen[s] = i
+            seen[s] = minute
         elif cycle_len is None:
-            # print("{} matches entry at {}".format(i, seen[s]))
-            # print("Found cycle of length {}".format(i - seen[s]))
-            cycle_len = i - seen[s]
+            # print("{} matches entry at {}".format(minute, seen[s]))
+            # print("Found cycle of length {}".format(minute - seen[s]))
+            cycle_len = minute - seen[s]
         else:
-            if (int(1e9) - i) % cycle_len == 0:
+            if (int(1e9) - minute) % cycle_len == 0:
                 # Part 2
                 t, l = resource_value(grid)
                 print(t*l)
