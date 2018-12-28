@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from elfcode import funcs
+from math import ceil, sqrt
 
 def run(program):
     # Just need to know value in register[-1] when inner loop starts
@@ -26,10 +27,14 @@ def read(fname):
     return ip, program
 
 def factors(x):
-    for i in range(1, x//2 + 1):
+    for i in range(1, ceil(sqrt(x))):
         if not x%i:
             yield i
-    yield x
+            yield x//i
+
+    i = int(sqrt(x))
+    if i**2 == x:
+        yield i
 
 if __name__=="__main__":
     ip, program = read("19_go_with_the_flow/input.txt")
