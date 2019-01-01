@@ -18,3 +18,4 @@
 ./17_water/flow.py | diff 17_water/output.txt -
 ./18_lumber/wood.py | diff 18_lumber/output.txt -
 ./19_go_with_the_flow/code.py | diff 19_go_with_the_flow/output.txt -
+./20_doors/doors.py | diff 20_doors/output.txt -
