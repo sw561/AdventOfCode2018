@@ -1,8 +1,20 @@
-from code import read
-
 # Print the program in readable format
 
-ip, program = read("19_go_with_the_flow/input.txt")
+ip = None
+
+def read(fname):
+    program = []
+    with open(fname, 'r') as f:
+        for line in f:
+            if line.startswith('#'):
+                global ip
+                ip = int(line.split()[-1])
+                continue
+
+            command, *args = line.split()
+            program.append([command] + [int(x) for x in args])
+
+    return ip, program
 
 def translate_to_reg(x):
     if x == ip:
@@ -33,17 +45,26 @@ def display(command, args):
         if command.endswith('r'):
             t_args[1] = translate_to_reg(t_args[1])
         else:
-            t_args[1] = "{:2d}".format(args[1])
+            if command.startswith('b'):
+                t_args[1] = "{:x}".format(args[1])
+            else:
+                t_args[1] = "{:2d}".format(args[1])
 
     t_args[2] = translate_to_reg(t_args[2])
     return t_args
 
-for i, (command, *args) in enumerate(program):
-    print("{:2d}".format(i), command, end=' ')
-    for x in display(command, args):
-        if type(x) is str:
-            print(x, end=' ')
-        else:
-            print("{:2d}".format(x), end=' ')
+def main(program):
 
-    print()
+    for i, (command, *args) in enumerate(program):
+        print("{:2d}".format(i), command, end=' ')
+        for x in display(command, args):
+            if type(x) is str:
+                print(x, end=' ')
+            else:
+                print("{:2d}".format(x), end=' ')
+
+        print()
+
+if __name__=="__main__":
+    ip, program = read("19_go_with_the_flow/input.txt")
+    main(program)

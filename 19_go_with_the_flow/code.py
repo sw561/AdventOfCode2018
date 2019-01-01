@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from elfcode import funcs
+from write_prog import read
 from math import ceil, sqrt
 
 def run(program):
@@ -12,19 +13,6 @@ def run(program):
         if register[ip] == 3:
             return register[-1]
         register[ip] += 1
-
-def read(fname):
-    program = []
-    with open(fname, 'r') as f:
-        for line in f:
-            if line.startswith('#'):
-                ip = int(line.split()[-1])
-                continue
-
-            command, *args = line.split()
-            program.append([command] + [int(x) for x in args])
-
-    return ip, program
 
 def factors(x):
     for i in range(1, ceil(sqrt(x))):
