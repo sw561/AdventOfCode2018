@@ -19,3 +19,4 @@
 ./18_lumber/wood.py | diff 18_lumber/output.txt -
 ./19_go_with_the_flow/code.py | diff 19_go_with_the_flow/output.txt -
 ./20_doors/doors.py | diff 20_doors/output.txt -
+./21_time_machine/code.py | diff 21_time_machine/output.txt -
