@@ -20,3 +20,4 @@
 ./19_go_with_the_flow/code.py | diff 19_go_with_the_flow/output.txt -
 ./20_doors/doors.py | diff 20_doors/output.txt -
 ./21_time_machine/code.py | diff 21_time_machine/output.txt -
+./22_cave/cave.py | diff 22_cave/output.txt -
