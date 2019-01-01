@@ -1,5 +1,5 @@
 
-from cave import erosion, risk
+from cave import terrain, risk, path_finding
 
 depth = 510
 targetx, targety = 10, 10
@@ -9,8 +9,7 @@ def terrain_type(*args):
         return 'M'
     elif (args[0], args[1]) == (args[2], args[3]):
         return 'T'
-    u = erosion(*args)
-    return ['.', '=', '|'][u % 3]
+    return ['.', '=', '|'][terrain(*args)]
 
 for y in range(16):
     for x in range(16):
@@ -18,3 +17,6 @@ for y in range(16):
     print()
 
 print(risk(targetx, targety, depth))
+
+time = path_finding(targetx, targety, depth)
+print(time)
