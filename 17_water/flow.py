@@ -115,7 +115,7 @@ def fill_water(grid):
 
 def main(fname, verbose=False):
     clays = []
-    pattern = re.compile("\\b\\d+\\b")
+    pattern = re.compile("\d+")
     with open(fname, 'r') as f:
         for line in f:
             x = re.findall(pattern, line)
