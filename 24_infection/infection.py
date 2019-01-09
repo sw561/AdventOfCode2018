@@ -5,7 +5,8 @@ from itertools import chain
 from copy import deepcopy
 
 class Group:
-    def __init__(self, n, hitpoints, weaknesses, immunities, attack, attack_type, initiative, army, id_n):
+    def __init__(self, n, hitpoints, weaknesses, immunities, attack,
+            attack_type, initiative, army, id_n):
         self.n = n
         self.hitpoints = hitpoints
         self.weaknesses = weaknesses
@@ -24,20 +25,6 @@ class Group:
         self.n = max(0, self.n - casualties)
         return casualties
 
-    def gen_props(self):
-        if self.immunities:
-            yield "immune to " + ", ".join(x for x in self.immunities)
-        if self.weaknesses:
-            yield "weak to " + ", ".join(x for x in self.weaknesses)
-
-    def props(self):
-        s = "; ".join(self.gen_props())
-        if s:
-            s = " ({}) ".format(s)
-        else:
-            s = " "
-        return s
-
     def hypothetical_damage(self, other_group):
         if self.attack_type in other_group.immunities:
             return 0
@@ -46,17 +33,14 @@ class Group:
         return self.n * self.attack
 
     def __str__(self):
-        return "{} units each with {} hit points{}with an attack that does {} {} damage at initiative {}".format(
-            self.n, self.hitpoints, self.props(), self.attack, self.attack_type, self.initiative
-            )
-
-    def str_short(self):
         def army_str(x):
             if x:
                 return "Infection"
             else:
                 return "Immune System"
-        return "{}: group {} contains {} units".format(army_str(self.army), self.id_n+1, self.n)
+        return "{}: group {} contains {} units".format(
+            army_str(self.army), self.id_n+1, self.n
+            )
 
 class Game:
     def __init__(self, groups):
@@ -78,7 +62,7 @@ class Game:
         return True
 
     def __str__(self):
-        return "\n".join(g.str_short() for g in self.groups)
+        return "\n".join(map(str, self.groups))
 
 class Stalemate(Exception):
     pass
@@ -94,9 +78,15 @@ def play_round(game):
 
     for index in choose_targets:
         attacker = game.groups[index]
-        best_target = max((i for i in range(len(game.groups)) if i not in targeted and game.groups[i].army != attacker.army),
+        best_target = max(
+            (i for i in range(len(game.groups)) if\
+                i not in targeted and game.groups[i].army != attacker.army),
             default = None,
-            key = lambda i: (attacker.hypothetical_damage(game.groups[i]), game.groups[i].effective_power(), game.groups[i].initiative)
+            key = lambda i: (
+                attacker.hypothetical_damage(game.groups[i]),
+                game.groups[i].effective_power(),
+                game.groups[i].initiative
+                )
             )
 
         if best_target is None:
@@ -112,7 +102,8 @@ def play_round(game):
 
     # Attacking phase
 
-    attack_order = sorted(range(len(game.groups)), key=lambda i: game.groups[i].initiative,
+    attack_order = sorted(range(len(game.groups)),
+        key=lambda i: game.groups[i].initiative,
         reverse=True)
     damage_done = False
 
@@ -126,7 +117,7 @@ def play_round(game):
         defender = game.groups[t]
         damage = attacker.hypothetical_damage(defender)
 
-        # print(attacker.str_short(), "dealing {} damage to".format(damage), defender.str_short())
+        # print(str(attacker), "dealing {} damage to".format(damage), str(defender))
         casualties = defender.take_damage(damage)
         if casualties:
             damage_done = True
