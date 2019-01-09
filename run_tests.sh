@@ -23,3 +23,4 @@
 ./22_cave/cave.py | diff 22_cave/output.txt -
 ./23_nanobots/nano.py | diff 23_nanobots/output.txt -
 ./24_infection/infection.py | diff 24_infection/output.txt -
+./25_constellations/constellations.py | diff 25_constellations/output.txt -
