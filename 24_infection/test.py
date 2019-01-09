@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from infection import read_file, Game, play_game
+from infection import read_file, play_game
 
 def assertEqual(x, y):
     try:
@@ -12,9 +12,12 @@ def assertEqual(x, y):
 def test1():
     groups = read_file("24_infection/test_input.txt")
 
-    g = Game(groups)
-    remaining = play_game(g)
-
+    remaining, army = play_game(groups)
     assertEqual(remaining, 5216)
+    assertEqual(army, 1)
+
+    remaining, army = play_game(groups, 1570)
+    assertEqual(remaining, 51)
+    assertEqual(army, 0)
 
 test1()

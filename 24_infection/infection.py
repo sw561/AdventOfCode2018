@@ -2,6 +2,7 @@
 
 import re
 from itertools import chain
+from copy import deepcopy
 
 class Group:
     def __init__(self, n, hitpoints, weaknesses, immunities, attack, attack_type, initiative, army, id_n):
@@ -19,8 +20,9 @@ class Group:
         return self.n * self.attack
 
     def take_damage(self, damage):
-        self.n -= damage // self.hitpoints
-        self.n = max(0, self.n)
+        casualties = damage // self.hitpoints
+        self.n = max(0, self.n - casualties)
+        return casualties
 
     def gen_props(self):
         if self.immunities:
@@ -58,10 +60,12 @@ class Group:
 
 class Game:
     def __init__(self, groups):
-        self.groups = groups
+        self.groups = deepcopy(groups)
 
-    def iter_groups(self, army):
-        yield from (x for x in self.groups if x.army == army)
+    def boost(self, bonus):
+        for g in self.groups:
+            if g.army == 0:
+                g.attack += bonus
 
     def stopping_condition(self):
         army_ids = set()
@@ -75,6 +79,9 @@ class Game:
 
     def __str__(self):
         return "\n".join(g.str_short() for g in self.groups)
+
+class Stalemate(Exception):
+    pass
 
 def play_round(game):
     # target selection
@@ -107,6 +114,7 @@ def play_round(game):
 
     attack_order = sorted(range(len(game.groups)), key=lambda i: game.groups[i].initiative,
         reverse=True)
+    damage_done = False
 
     for attacker_index in attack_order:
 
@@ -119,9 +127,14 @@ def play_round(game):
         damage = attacker.hypothetical_damage(defender)
 
         # print(attacker.str_short(), "dealing {} damage to".format(damage), defender.str_short())
-        defender.take_damage(damage)
+        casualties = defender.take_damage(damage)
+        if casualties:
+            damage_done = True
 
     # Remove dead groups
+
+    if not damage_done:
+        raise Stalemate()
 
     i = 0
     while i < len(game.groups):
@@ -130,7 +143,12 @@ def play_round(game):
         else:
             game.groups.pop(i)
 
-def play_game(game):
+def play_game(groups, boost=0, cache=dict()):
+    if boost in cache:
+        return cache[boost]
+    # print("Evaluating with boost = {}".format(boost))
+    game = Game(groups)
+    game.boost(boost)
     # print(game)
 
     while True:
@@ -143,7 +161,9 @@ def play_game(game):
         # else:
         #     input()
 
-    return sum(g.n for g in game.groups)
+    ret = sum(g.n for g in game.groups), game.groups[0].army
+    cache[boost] = ret
+    return ret
 
 def read_group(group, army, id_n):
 
@@ -199,8 +219,37 @@ def read_file(fname):
 
     return groups
 
+def bisection(groups, left, right):
+    # Find smallest value i s.t. f(i) = True
+
+    def f(boost):
+        try:
+            remaining, army = play_game(groups, boost)
+        except Stalemate:
+            return False
+        return army == 0
+
+    assert f(left) is False
+    assert f(right) is True
+
+    while right - left > 1:
+        m = (left + right) // 2
+        if f(m):
+            right = m
+        else:
+            left = m
+
+    return right
+
 if __name__=="__main__":
     groups = read_file("24_infection/input.txt")
 
-    g = Game(groups)
-    print(play_game(g))
+    # part 1
+    remaining, army = play_game(groups)
+    print(remaining)
+
+    # part 2
+    required_boost = bisection(groups, 0, 200)
+    # print(required_boost)
+    remaining, army = play_game(groups, boost=required_boost)
+    print(remaining)
