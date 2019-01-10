@@ -42,79 +42,59 @@ class Group:
             army_str(self.army), self.id_n+1, self.n
             )
 
-class Game:
-    def __init__(self, groups):
-        self.groups = deepcopy(groups)
+def stopping_condition(groups):
+    army_ids = set()
+    for group in groups:
+        if group.n > 0:
+            army_ids.add(group.army)
+            if len(army_ids) >= 2:
+                return False
 
-    def boost(self, bonus):
-        for g in self.groups:
-            if g.army == 0:
-                g.attack += bonus
-
-    def stopping_condition(self):
-        army_ids = set()
-        for group in self.groups:
-            if group.n > 0:
-                army_ids.add(group.army)
-                if len(army_ids) >= 2:
-                    return False
-
-        return True
-
-    def __str__(self):
-        return "\n".join(map(str, self.groups))
+    return True
 
 class Stalemate(Exception):
     pass
 
-def play_round(game):
+def play_round(groups):
     # target selection
 
-    choose_targets = sorted(range(len(game.groups)),
-        key=lambda i: (game.groups[i].effective_power(), game.groups[i].initiative),
+    order = sorted(range(len(groups)),
+        key=lambda i: (groups[i].effective_power(), groups[i].initiative),
         reverse=True)
     target = dict()
     targeted = set()
 
-    for index in choose_targets:
-        attacker = game.groups[index]
+    for index in order:
+        attacker = groups[index]
         best_target = max(
-            (i for i in range(len(game.groups)) if\
-                i not in targeted and game.groups[i].army != attacker.army),
+            (i for i in range(len(groups)) if\
+                i not in targeted and groups[i].army != attacker.army),
             default = None,
             key = lambda i: (
-                attacker.hypothetical_damage(game.groups[i]),
-                game.groups[i].effective_power(),
-                game.groups[i].initiative
+                attacker.hypothetical_damage(groups[i]),
+                groups[i].effective_power(),
+                groups[i].initiative
                 )
             )
 
-        if best_target is None:
-            continue
-
-        if attacker.hypothetical_damage(game.groups[best_target]) == 0:
+        if best_target is None or\
+                attacker.hypothetical_damage(groups[best_target]) == 0:
             continue
 
         target[index] = best_target
         targeted.add(best_target)
 
-    # print("target:", target)
-
     # Attacking phase
 
-    attack_order = sorted(range(len(game.groups)),
-        key=lambda i: game.groups[i].initiative,
+    order = sorted(target.keys(),
+        key=lambda i: groups[i].initiative,
         reverse=True)
     damage_done = False
 
-    for attacker_index in attack_order:
+    for index in order:
 
-        t = target.get(attacker_index, None)
-        if t is None:
-            continue
-
-        attacker = game.groups[attacker_index]
-        defender = game.groups[t]
+        attacker = groups[index]
+        defender = groups[target[index]]
         damage = attacker.hypothetical_damage(defender)
 
         # print(str(attacker), "dealing {} damage to".format(damage), str(defender))
@@ -122,37 +102,38 @@ def play_round(game):
         if casualties:
             damage_done = True
 
-    # Remove dead groups
-
     if not damage_done:
         raise Stalemate()
 
+    # Remove dead groups
+
     i = 0
-    while i < len(game.groups):
-        if game.groups[i].n:
+    while i < len(groups):
+        if groups[i].n:
             i += 1
         else:
-            game.groups.pop(i)
+            groups.pop(i)
 
 def play_game(groups, boost=0, cache=dict()):
     if boost in cache:
         return cache[boost]
     # print("Evaluating with boost = {}".format(boost))
-    game = Game(groups)
-    game.boost(boost)
-    # print(game)
+    groups = deepcopy(groups)
 
-    while True:
-        play_round(game)
-        # print("--------------------")
-        # print(game)
-        # print("--------------------")
-        if game.stopping_condition():
-            break
-        # else:
-        #     input()
+    # boost for immune system
+    for g in groups:
+        if g.army == 0:
+            g.attack += boost
+    # print("\n".join(map(str, groups)))
 
-    ret = sum(g.n for g in game.groups), game.groups[0].army
+    while not stopping_condition(groups):
+        play_round(groups)
+        # print("--------------------")
+        # print("\n".join(map(str, groups)))
+        # print("--------------------")
+        # input()
+
+    ret = sum(g.n for g in groups), groups[0].army
     cache[boost] = ret
     return ret
 
