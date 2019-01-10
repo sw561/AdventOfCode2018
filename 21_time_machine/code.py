@@ -6,7 +6,7 @@ import write_prog
 def run(program):
     # Just need to know value in register[1] when it is compared to register[0]
     # they must be equal for the program to halt
-    verbose = False
+    # verbose = False
 
     while 0 <= register[ip] < len(program):
         command, *args = program[register[ip]]

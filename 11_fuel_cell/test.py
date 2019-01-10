@@ -42,9 +42,9 @@ def test3():
     (42, 119, 232, 251, 12),
     ]
 
-    for data, power, x, y, s in tests:
+    for data, p, x, y, s in tests:
         grid = construct_grid(data)
-        assertEqual(part2(grid), (power, x, y, s))
+        assertEqual(part2(grid), (p, x, y, s))
 
 test1()
 test2()

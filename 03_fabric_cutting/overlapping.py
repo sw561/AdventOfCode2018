@@ -33,7 +33,7 @@ def process(claims, size=1000):
 def overlap(claims):
     grid, overlapping_claim = process(claims)
 
-    part1 = sum(sum(1 for x in row if x==-1) for row in grid)
+    part1 = sum(sum(x==-1 for x in row) for row in grid)
 
     part2 = overlapping_claim.index(False) + 1
 
@@ -43,4 +43,5 @@ if __name__=="__main__":
     with open("03_fabric_cutting/input.txt", 'r') as f:
         claims = [x.strip() for x in f]
 
-    print(*overlap(claims))
+    for x in overlap(claims):
+        print(x)

@@ -54,10 +54,8 @@ class State:
         return sum(i for i, x in zip(count(start=self.i), self.d) if x == '#')
 
 def sum_generator(state, translate):
-    i = 0
-    while True:
+    for i in count(start=1):
         state = state.evolve(translate)
-        i += 1
         s = state.sum()
         # Print here to see visually what is happening
         # print(i, state, s)

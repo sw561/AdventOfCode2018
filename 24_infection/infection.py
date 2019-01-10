@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-import re
-from itertools import chain
 from copy import deepcopy
 
 class Group:
@@ -173,7 +171,6 @@ def read_file(fname):
     groups = []
     ids = [0, 0]
     army = 0
-    numbers = re.compile("\d+")
     with open(fname, 'r') as f:
         for line in f:
             if line.startswith("Immune"):

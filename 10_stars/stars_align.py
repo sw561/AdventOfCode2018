@@ -1,16 +1,9 @@
 #!/usr/bin/env python3
 
-def process(line, pos_size=6):
-    x = int(line[10:10+pos_size])
-    y = int(line[12+pos_size:12+2*pos_size])
-
-    vx = int(line[24+2*pos_size:26+2*pos_size])
-    vy = int(line[28+2*pos_size:30+2*pos_size])
-
-    return (x, y), (vx, vy)
+import re
 
 def positions(data, time):
-    return [(px + vx*time, py + vy*time) for ((px, py), (vx, vy)) in data]
+    return [(px + vx*time, py + vy*time) for px, py, vx, vy in data]
 
 def spread(data, t):
     pos = positions(data, t)
@@ -77,8 +70,6 @@ def display(data, t):
     data = [['.']*(1 + xmax - xmin) for _ in range(1 + ymax - ymin)]
 
     for px, py in pos:
-        y_index = py - ymin
-        x_index = px - xmin
         data[py-ymin][px-xmin] = '#'
 
     for row in data:
@@ -87,8 +78,12 @@ def display(data, t):
     return data
 
 if __name__=="__main__":
+    pattern = re.compile("-?\d+")
+    data = []
     with open("10_stars/input.txt", 'r') as f:
-        data = [process(line) for line in f]
+        for line in f:
+            vals = tuple(map(int, re.findall(pattern, line)))
+            data.append(vals)
 
     t = bisection(lambda x: spread(data, x))
     # part 1
