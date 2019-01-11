@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-from stars_align import process, bisection, spread, display
+import re
+from stars_align import bisection, spread, display
 
 def assertEqual(x, y):
     try:
@@ -9,8 +10,9 @@ def assertEqual(x, y):
         print("{} != {}".format(x, y))
         raise
 
+pattern = re.compile("-?\d+")
 with open("10_stars/test_input.txt", 'r') as f:
-    data = [process(line, pos_size=2) for line in f]
+    data = [tuple(map(int, re.findall(pattern, line))) for line in f]
 
 t = bisection(lambda x: spread(data, x))
 # Part 1

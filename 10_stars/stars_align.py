@@ -79,11 +79,8 @@ def display(data, t):
 
 if __name__=="__main__":
     pattern = re.compile("-?\d+")
-    data = []
     with open("10_stars/input.txt", 'r') as f:
-        for line in f:
-            vals = tuple(map(int, re.findall(pattern, line)))
-            data.append(vals)
+        data = [tuple(map(int, re.findall(pattern, line))) for line in f]
 
     t = bisection(lambda x: spread(data, x))
     # part 1
