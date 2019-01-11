@@ -62,46 +62,49 @@ def remove(pos, carts, new_carts):
 
     raise Exception("remove function did not find the cart")
 
-first_crash = True
-def move(track, carts, occupied):
-    global first_crash
-    new_carts = []
-    # sort in reverse, since it's more efficient to pop from the end
-    carts.sort(reverse=True)
+def play(track, carts, part1_only=False):
+    first_crash = None
+    occupied = set(cart[0] for cart in carts)
+    while len(carts) > 1:
+        new_carts = []
+        # sort in reverse, since it's more efficient to pop from the end
+        carts.sort(reverse=True)
 
-    while carts:
-        (pos, direction, n) = carts.pop()
-        occupied.remove(pos)
-
-        pos = new_position_func_dict[direction](pos)
-
-        if pos in occupied:
-            if first_crash:
-                print("{},{}".format(pos[1], pos[0]))
-                first_crash = False
-
+        while carts:
+            (pos, direction, n) = carts.pop()
             occupied.remove(pos)
-            # Need to remove cart that was crashed into. This cart could be in
-            # carts or new_carts.
-            remove(pos, carts, new_carts)
 
-        else:
-            # No crash, update details and add to new_carts
-            direction, n = update_dn(track[pos[0]][pos[1]], direction, n)
+            pos = new_position_func_dict[direction](pos)
 
-            occupied.add(pos)
-            new_carts.append((pos, direction, n))
+            if pos in occupied:
+                if first_crash is None:
+                    first_crash = pos
+                    if part1_only:
+                        return first_crash
 
-    return new_carts
+                occupied.remove(pos)
+                # Need to remove cart that was crashed into. This cart could be in
+                # carts or new_carts.
+                remove(pos, carts, new_carts)
+
+            else:
+                # No crash, update details and add to new_carts
+                direction, n = update_dn(track[pos[0]][pos[1]], direction, n)
+
+                occupied.add(pos)
+                new_carts.append((pos, direction, n))
+
+        carts = new_carts
+
+    return first_crash, carts
 
 if __name__=="__main__":
     with open("13_mine_cart/input.txt", 'r') as f:
         track = [[x for x in line if x!="\n"] for line in f]
 
     track, carts = process(track)
-    occupied = set(cart[0] for cart in carts)
 
-    while len(carts) > 1:
-        carts = move(track, carts, occupied)
+    first_crash, carts = play(track, carts)
 
+    print("{},{}".format(first_crash[1], first_crash[0]))
     print("{},{}".format(carts[0][0][1], carts[0][0][0]))
