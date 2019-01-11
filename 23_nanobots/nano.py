@@ -5,12 +5,9 @@ from itertools import product
 from heapq import heappop, heappush
 
 def read(fname):
-    nanobots = []
     pattern = re.compile("-?\d+")
     with open(fname, 'r') as f:
-        for line in f:
-            x = re.findall(pattern, line)
-            nanobots.append(tuple(map(int, x)))
+        nanobots = [tuple(map(int, re.findall(pattern, line))) for line in f]
 
     return nanobots
 
@@ -29,11 +26,19 @@ def part1(nanobots):
     r = nanobots[s][3]
     return count_in_range(nanobots, pos, r)
 
-def multiply(g):
-    p = next(g)
-    for i in g:
-        p *= i
-    return p
+def subcubes(min_coords, max_coords):
+    # Yield 8 smaller cubes
+
+    mid = [(left + right) // 2 for left, right in zip(min_coords, max_coords)]
+
+    for p in product(range(2), repeat=3):
+        mi = tuple(m if pi else left for pi, left, m in\
+            zip(p, min_coords, mid)
+            )
+        ma = tuple(right if pi else m for pi, m, right in\
+            zip(p, mid, max_coords)
+            )
+        yield mi, ma
 
 def distance(left, right, x):
     if x < left:
@@ -42,70 +47,45 @@ def distance(left, right, x):
         return x - (right - 1)
     return 0
 
-class Cube:
-    def __init__(self, min_coords, max_coords):
-        self.min_coords = min_coords
-        self.max_coords = max_coords
+def in_range(min_coords, max_coords, x, y, z, r):
+    d = sum(distance(l, r, u) for l, r, u in\
+        zip(min_coords, max_coords, [x, y, z]))
+    return d <= r
 
-    def subcubes(self):
-        # Yield 8 smaller cubes
-
-        mid = [(left + right) // 2 for left, right in zip(self.min_coords, self.max_coords)]
-
-        for p in product(range(2), repeat=3):
-            min_coords = tuple(m if pi else left for pi, left, m in\
-                zip(p, self.min_coords, mid)
-                )
-            max_coords = tuple(right if pi else m for pi, m, right in\
-                zip(p, mid, self.max_coords)
-                )
-            yield Cube(min_coords, max_coords)
-
-    def in_range(self, x, y, z, r):
-        d = sum(distance(l, r, u) for l, r, u in\
-            zip(self.min_coords, self.max_coords, [x, y, z]))
-        return d <= r
-
-    def count_in_range(self, nanobots):
-        return sum(self.in_range(*bot) for bot in nanobots)
-
-    def size(self):
-        return multiply(right - left for left, right in zip(self.min_coords, self.max_coords))
-
-    def __str__(self):
-        return "{} {}".format(self.min_coords, self.max_coords)
+def count_in_range_cube(min_coords, max_coords, nanobots):
+    return sum(in_range(min_coords, max_coords, *bot) for bot in nanobots)
 
 def part2(nanobots):
     min_coords = tuple(min(bot[i] for bot in nanobots) for i in range(3))
     max_coords = tuple(max(bot[i] for bot in nanobots) for i in range(3))
 
-    c = Cube(min_coords, max_coords)
-    count = c.count_in_range(nanobots)
-    h = [(-count, c.min_coords, c)]
+    count = count_in_range_cube(min_coords, max_coords, nanobots)
+    h = [(-count, min_coords, max_coords)]
 
-    optimal = None
+    # Optimal will contain (-count, distance_from_origin)
+    # Minimize this, to maximise count
+    optimal = (0, 0)
 
     while h:
-        mcount, _, c = heappop(h)
+        mcount, min_coords, max_coords = heappop(h)
 
-        if optimal is not None and mcount > optimal[0]:
-            return optimal[-1]
+        if mcount > optimal[0]:
+            return optimal[1]
 
-        # print("Searching from {} {}".format(c, mcount))
-        for sub in c.subcubes():
-            if sub.size() == 0:
+        # print("Searching from {} {} {}".format(min_coords, max_coords, mcount))
+        for sub in subcubes(min_coords, max_coords):
+            if any(l == r for l, r in zip(*sub)):
+                # This is a zero volume cube, no need to consider it
                 continue
 
-            count = sub.count_in_range(nanobots)
+            count = count_in_range_cube(*sub, nanobots)
 
-            if sub.size() == 1:
-                d = sum(map(abs, sub.min_coords))
-                o = (-count, d)
-                if optimal is None or o < optimal:
-                    optimal = o
+            if all(r == l+1 for l, r in zip(*sub)):
+                # Volume 1 cube, no need to subdivide further
+                optimal = min(optimal, (-count, sum(map(abs, sub[0]))))
 
             else:
-                heappush(h, (-count, sub.min_coords, sub))
+                heappush(h, (-count, *sub))
 
 if __name__=="__main__":
     nanobots = read("23_nanobots/input.txt")
