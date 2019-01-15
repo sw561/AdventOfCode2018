@@ -100,19 +100,6 @@ def flood_fill(grid, x, y):
 
     return overflow
 
-def fill_water(grid):
-    grid.set(500, 0, '+')
-    # In heap store tuples (-y, x, y) since we want to largest y
-    d = deque([(500, 1)])
-
-    while d:
-        x, y = d.popleft()
-
-        overflow = flood_fill(grid, x, y)
-
-        for c in overflow:
-            d.append(c)
-
 def main(fname, verbose=False):
     clays = []
     pattern = re.compile("\d+")
@@ -123,7 +110,9 @@ def main(fname, verbose=False):
 
     grid = Grid(clays)
 
-    fill_water(grid)
+    d = deque([(500, 1)])
+    while d:
+        d += flood_fill(grid, *d.popleft())
 
     if verbose:
         print(grid)
