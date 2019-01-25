@@ -29,16 +29,21 @@ def risk(targetx, targety, depth):
         for y in range(targety+1) for x in range(targetx + 1)
         )
 
+ROCKY = 0
+WET = 1
+NARROW = 2
+
 CLIMBING = 0
 TORCH = 1
 NEITHER = 2
+
 def passable(terrain, tool):
-    if tool == CLIMBING:
-        return terrain in [0, 1]
-    elif tool == TORCH:
-        return terrain in [0, 2]
-    elif tool == NEITHER:
-        return terrain in [1, 2]
+    if terrain == ROCKY:
+        return tool in [CLIMBING, TORCH]
+    elif terrain == WET:
+        return tool in [CLIMBING, NEITHER]
+    elif terrain == NARROW:
+        return tool in [TORCH, NEITHER]
 
 def adjacent(time, x, y, tool):
     if x > 0:

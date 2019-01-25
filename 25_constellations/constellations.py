@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import re
 from collections import defaultdict
 
 def manhattan_distance(p1, p2):
@@ -48,11 +47,8 @@ def make_constellations(graph):
     return n_constellations
 
 def main(fname):
-    pos = []
-    pattern = re.compile("-?\d+")
     with open(fname, 'r') as f:
-        for line in f:
-            pos.append(tuple(int(x) for x in re.findall(pattern, line)))
+        pos = [tuple(int(x) for x in line.split(',')) for line in f]
 
     g = create_graph(pos)
     return make_constellations(g)

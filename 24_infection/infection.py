@@ -2,6 +2,9 @@
 
 from copy import deepcopy
 
+IMMUNE = 0
+INFECTION = 1
+
 class Group:
     def __init__(self, n, hitpoints, weaknesses, immunities, attack,
             attack_type, initiative, army, id_n):
@@ -120,7 +123,7 @@ def play_game(groups, boost=0, cache=dict()):
 
     # boost for immune system
     for g in groups:
-        if g.army == 0:
+        if g.army == IMMUNE:
             g.attack += boost
     # print("\n".join(map(str, groups)))
 
@@ -170,21 +173,17 @@ def read_group(group, army, id_n):
 def read_file(fname):
     groups = []
     ids = [0, 0]
-    army = 0
     with open(fname, 'r') as f:
         for line in f:
             if line.startswith("Immune"):
-                continue
+                army = IMMUNE
 
             elif line.startswith("Infection"):
-                army = 1
-                continue
+                army = INFECTION
 
-            elif not line.strip():
-                continue
-
-            groups.append(read_group(line, army, ids[army]))
-            ids[army] += 1
+            elif line.strip():
+                groups.append(read_group(line, army, ids[army]))
+                ids[army] += 1
 
     return groups
 
@@ -196,7 +195,7 @@ def bisection(groups, left, right):
             remaining, army = play_game(groups, boost)
         except Stalemate:
             return False
-        return army == 0
+        return army == IMMUNE
 
     assert f(left) is False
     assert f(right) is True
