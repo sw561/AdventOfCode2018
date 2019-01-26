@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 from copy import deepcopy
-from itertools import count
 
 def process_grid(inp):
     # return grid without agents in the way
@@ -47,6 +46,7 @@ class Game:
         self.agents = deepcopy(agents)
         # set of squares occupied by agents
         self.occupied = {agent.pos: i for i, agent in enumerate(agents)}
+        self.round_counter = 0
 
     def move(self, agent_id, pos):
         old_pos = self.agents[agent_id].pos
@@ -123,7 +123,8 @@ class Game:
             yield str(self.agents[agent_id])
 
     def __str__(self):
-        return "\n".join("".join(self.display_row(i)) for i in range(len(self.grid)))
+        s = "Round: {}\n".format(self.round_counter)
+        return s + "\n".join("".join(self.display_row(i)) for i in range(len(self.grid)))
 
 def find_move(game, agent_id):
 
@@ -182,9 +183,8 @@ def find_move(game, agent_id):
 def play(grid, agents, elf_attack=3, verbose=False):
     g = Game(grid, agents)
 
-    for round_counter in count():
+    while True:
         if verbose:
-            print("\nRound: {}".format(round_counter))
             print(g)
 
         for agent_id in g.agent_ids():
@@ -193,7 +193,7 @@ def play(grid, agents, elf_attack=3, verbose=False):
                 continue
 
             if not g.targets_remaining(g.agents[agent_id].t):
-                return round_counter, g
+                return g
 
             if not g.in_range(agent_id):
                 destination = find_move(g, agent_id)
@@ -205,11 +205,19 @@ def play(grid, agents, elf_attack=3, verbose=False):
             if w is not None:
                 g.damage(w, elf_attack if g.agents[agent_id].t=='E' else 3)
 
-def n_elf_survivors(grid, agents, elf_attack):
-    r, g = play(grid, agents, elf_attack=elf_attack)
+        g.round_counter += 1
 
-    n_alive = sum(agent.t == 'E' for agent in g.agents if agent.live())
-    return n_alive
+class PlayCache:
+    def __init__(self, grid, agents):
+        def f(elf_attack, **kwargs):
+            return play(grid, agents, elf_attack=elf_attack, **kwargs)
+        self.f = f
+        self.cache = {}
+
+    def __call__(self, elf_attack=3, **kwargs):
+        if elf_attack not in self.cache:
+            self.cache[elf_attack] = self.f(elf_attack, **kwargs)
+        return self.cache[elf_attack]
 
 def bisection(f, left, right):
     # Find smallest value i s.t. f(i) = True
@@ -226,26 +234,27 @@ def bisection(f, left, right):
 
     return right
 
+def part2(pc):
+    def all_elves_survive(elf_attack):
+        g = pc(elf_attack)
+        return all(agent.live() for agent in g.agents if agent.t == 'E')
+
+    elf_attack = bisection(all_elves_survive, 3, 50)
+    game = pc(elf_attack)
+    return elf_attack, game
+
 if __name__=="__main__":
     with open("15_elves_goblins/input.txt", 'r') as f:
         inp = [line.strip() for line in f]
 
-    grid, agents = process_grid(inp)
+    pc = PlayCache(*process_grid(inp))
 
     # Part 1
-    round_counter, game = play(grid, agents)
-    # print("\nRound: {}".format(round_counter))
+    game = pc()
     # print(game)
-    print(round_counter * game.total_hitpoints())
+    print(game.round_counter * game.total_hitpoints())
 
-    # Part 2
-    n_elves = sum(agent.t == 'E' for agent in agents)
-
-    elf_attack = bisection(
-        lambda x: n_elf_survivors(grid, agents, x) == n_elves, 3, 50
-        )
-
-    round_counter, game = play(grid, agents, elf_attack=elf_attack)
-    # print("\nelf_attack = {} Round: {}".format(elf_attack, round_counter))
+    elf_attack, game = part2(pc)
+    # print("\nelf_attack = {}".format(elf_attack))
     # print(game)
-    print(round_counter * game.total_hitpoints())
+    print(game.round_counter * game.total_hitpoints())
