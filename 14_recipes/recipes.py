@@ -8,22 +8,29 @@ def solve(inp):
     p1 = 0
     p2 = 1
 
+    def check():
+        for i, x in enumerate(inp):
+            if x != u[-1-i]:
+                return False
+        return True
+
     while True:
         x = u[p1] + u[p2]
 
         if x >= 10:
             u.append(1)
-            if all(x == y for x, y in zip(inp, reversed(u))):
+            if check():
                 return u
             u.append(x-10)
         else:
             u.append(x)
 
-        if all(x == y for x, y in zip(inp, reversed(u))):
+        if check():
             return u
 
-        p1 = (p1 + 1 + u[p1]) % len(u)
-        p2 = (p2 + 1 + u[p2]) % len(u)
+        lu = len(u)
+        p1 = (p1 + 1 + u[p1]) % lu
+        p2 = (p2 + 1 + u[p2]) % lu
 
     return u
 

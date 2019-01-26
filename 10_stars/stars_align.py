@@ -67,13 +67,13 @@ def display(data, t):
     ymin = min(p[1] for p in pos)
     ymax = max(p[1] for p in pos)
 
-    data = [['.']*(1 + xmax - xmin) for _ in range(1 + ymax - ymin)]
+    data = [[' ']*(1 + xmax - xmin) for _ in range(1 + ymax - ymin)]
 
     for px, py in pos:
         data[py-ymin][px-xmin] = '#'
 
     for row in data:
-        print("".join(x for x in row))
+        print("".join(row))
 
     return data
 

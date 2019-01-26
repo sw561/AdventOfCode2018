@@ -25,7 +25,7 @@ def adjacent(grid, i, j, n):
                 yield grid[y][x]
 
 def make_str(grid):
-    return "\n".join("".join(c for c in line) for line in grid)
+    return "\n".join("".join(line) for line in grid)
 
 def evolve(n, grid, grid2):
     for j in range(n):
