@@ -42,8 +42,13 @@ class Grid:
         self.grid[y][x - self.xmin] = val
 
     def count_water(self):
-        reachable = sum(char == '|' for row in self.grid[self.ymin:] for char in row)
-        standing = sum(char == '~' for row in self.grid[self.ymin:] for char in row)
+        reachable, standing = 0, 0
+        for row in self.grid[self.ymin:]:
+            for char in row:
+                if char == '|':
+                    reachable += 1
+                elif char == '~':
+                    standing += 1
         return reachable, standing
 
     def __str__(self):
@@ -98,15 +103,13 @@ def flood_fill(grid, x, y):
         # No outflow, go up one square
         y -= 1
 
-    return overflow
+def read_clay(line, pattern=re.compile("\d+")):
+    match = re.findall(pattern, line)
+    return Clay(*map(int, match), vertical=line.startswith('x'))
 
 def main(fname, verbose=False):
-    clays = []
-    pattern = re.compile("\d+")
     with open(fname, 'r') as f:
-        for line in f:
-            x = re.findall(pattern, line)
-            clays.append(Clay(*map(int, x), vertical=line.startswith('x')))
+        clays = [read_clay(line) for line in f]
 
     grid = Grid(clays)
 
